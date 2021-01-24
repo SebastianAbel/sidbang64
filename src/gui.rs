@@ -39,7 +39,7 @@ pub struct DemoApp {
     pub osc_select: [u8; 16],   
 
     pub kb_mode: KeyboardMode,
-    pub selected_octave: i8,
+    pub selected_octave: [i8; 3],
 
     pub paste_key: bool,
     pub shift_key: bool,
@@ -62,7 +62,7 @@ impl DemoApp {
             osc_select: [0; 16],
 
             kb_mode: KeyboardMode::QWERTY,    
-            selected_octave: 0,  
+            selected_octave: [0; 3], 
 
             paste_key: false,
             shift_key: false,
@@ -1561,7 +1561,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
             let note = ((octave+o as u8)*12 + note_map[i]) as i8;
             for _press in widget::Button::new()
                 .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::LIGHT_BLUE}
-                    else if app.kb_mode as usize == 0 || (app.selected_octave == o as i8) || ((app.selected_octave+1 == o as i8) && ((note%12) < 4)) {conrod_core::color::WHITE}
+                    else if app.kb_mode as usize == 0 || (app.selected_octave[player.inst_id as usize] == o as i8) || ((app.selected_octave[player.inst_id as usize]+1 == o as i8) && ((note%12) < 4)) {conrod_core::color::WHITE}
                     else {conrod_core::color::GREY})
                 //.label(&label)
                 .mid_left_with_margin_on(ids.canvas, (key_d*i) as f64 + (7*key_d*o) as f64)
@@ -1571,7 +1571,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
             {
                 player.instrument_notes[player.inst_id as usize] = note;
-                app.selected_octave = o as i8;
+                app.selected_octave[player.inst_id as usize] = o as i8;
                 app.preview_update = 10;
             }        
         }
@@ -1587,7 +1587,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
                 .set(ids.kbd[o*12+i], ui)
             {
                 player.instrument_notes[player.inst_id as usize] = note;
-                app.selected_octave = o as i8;
+                app.selected_octave[player.inst_id as usize] = o as i8;
                 app.preview_update = 10;
             }        
         }
@@ -1603,7 +1603,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
                 .set(ids.kbd[o*12+i], ui)
             {
                 player.instrument_notes[player.inst_id as usize] = note;
-                app.selected_octave = o as i8;
+                app.selected_octave[player.inst_id as usize] = o as i8;
                 app.preview_update = 10;
             }        
         }    

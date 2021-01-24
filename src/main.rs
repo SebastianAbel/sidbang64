@@ -173,8 +173,8 @@ fn main() {
                                 KeyboardMode::QWERTY => {
                                     for i in 0..keyboard_keys.len() {
                                         if input.virtual_keycode == Some(keyboard_keys[i]) {
-                                            if (app.selected_octave*12 + i as i8) < 96 {
-                                                player.instrument_notes[player.inst_id as usize] = app.selected_octave*12 + i as i8;
+                                            if (app.selected_octave[player.inst_id as usize]*12 + i as i8) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = app.selected_octave[player.inst_id as usize]*12 + i as i8;
                                                 app.preview_update = 10;
                                             }
                                         }
@@ -182,9 +182,9 @@ fn main() {
                                     for i in 0..keyboard_keys_nr.len() {
                                         if input.virtual_keycode == Some(keyboard_keys_nr[i]) {
                                             //player.instrument_notes[player.inst_id as usize] = i as i8;
-                                            app.selected_octave = i as i8;
-                                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12) < 96 {
-                                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12;
+                                            app.selected_octave[player.inst_id as usize] = i as i8;
+                                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12;
                                                 app.preview_update = 10;
                                             }
                                         }
@@ -193,8 +193,8 @@ fn main() {
                                 KeyboardMode::QWERTZ => {
                                     for i in 0..keyboard_keys.len() {
                                         if input.virtual_keycode == Some(_keyboard_keys_qwertz[i]) {
-                                            if (app.selected_octave*12 + i as i8) < 96 {
-                                                player.instrument_notes[player.inst_id as usize] = app.selected_octave*12 + i as i8;
+                                            if (app.selected_octave[player.inst_id as usize]*12 + i as i8) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = app.selected_octave[player.inst_id as usize]*12 + i as i8;
                                                 app.preview_update = 10;
                                             }
                                         }
@@ -202,9 +202,9 @@ fn main() {
                                     for i in 0..keyboard_keys_nr.len() {
                                         if input.virtual_keycode == Some(keyboard_keys_nr[i]) {
                                             //player.instrument_notes[player.inst_id as usize] = i as i8;
-                                            app.selected_octave = i as i8;
-                                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12) < 96 {
-                                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12;
+                                            app.selected_octave[player.inst_id as usize] = i as i8;
+                                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12;
                                                 app.preview_update = 10;
                                             }
                                         }
