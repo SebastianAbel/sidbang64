@@ -1,6 +1,6 @@
 [package]
 name = "sidbang64"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["sab@goarana.com"]
 edition = "2018"
 
