@@ -18,7 +18,7 @@ mod oscillator;
 mod track;
 mod instrument;
 
-use gui::{WIN_W, WIN_H};
+use gui::{WIN_W, WIN_H, KeyboardMode};
 use conrod_glium::Renderer;
 use glium::Surface;
 use sid_player::SidPlayer;
@@ -83,6 +83,66 @@ fn main() {
     'main: loop {
         player.check_update();
 
+        let keyboard_keys = [
+            glium::glutin::VirtualKeyCode::A,
+            glium::glutin::VirtualKeyCode::W,
+            glium::glutin::VirtualKeyCode::S,
+
+            glium::glutin::VirtualKeyCode::E,
+            glium::glutin::VirtualKeyCode::D,
+            glium::glutin::VirtualKeyCode::F,
+
+            glium::glutin::VirtualKeyCode::T,
+            glium::glutin::VirtualKeyCode::G,
+            glium::glutin::VirtualKeyCode::Y,
+
+            glium::glutin::VirtualKeyCode::H,
+            glium::glutin::VirtualKeyCode::U,
+            glium::glutin::VirtualKeyCode::J,
+
+            glium::glutin::VirtualKeyCode::K,
+            glium::glutin::VirtualKeyCode::O,
+            glium::glutin::VirtualKeyCode::L,
+
+            glium::glutin::VirtualKeyCode::P,
+        ];
+
+        let _keyboard_keys_qwertz = [
+            glium::glutin::VirtualKeyCode::A,
+            glium::glutin::VirtualKeyCode::W,
+            glium::glutin::VirtualKeyCode::S,
+
+            glium::glutin::VirtualKeyCode::E,
+            glium::glutin::VirtualKeyCode::D,
+            glium::glutin::VirtualKeyCode::F,
+
+            glium::glutin::VirtualKeyCode::T,
+            glium::glutin::VirtualKeyCode::G,
+            glium::glutin::VirtualKeyCode::Z,
+
+            glium::glutin::VirtualKeyCode::H,
+            glium::glutin::VirtualKeyCode::U,
+            glium::glutin::VirtualKeyCode::J,
+
+            glium::glutin::VirtualKeyCode::K,
+            glium::glutin::VirtualKeyCode::O,
+            glium::glutin::VirtualKeyCode::L,
+
+            glium::glutin::VirtualKeyCode::P,            
+        ];
+
+        let keyboard_keys_nr = [
+            glium::glutin::VirtualKeyCode::Key1,
+            glium::glutin::VirtualKeyCode::Key2,
+            glium::glutin::VirtualKeyCode::Key3,
+            glium::glutin::VirtualKeyCode::Key4,
+            glium::glutin::VirtualKeyCode::Key5,
+            glium::glutin::VirtualKeyCode::Key6,
+            glium::glutin::VirtualKeyCode::Key7,
+            glium::glutin::VirtualKeyCode::Key8,
+
+        ];        
+
         // Handle all events.
         for event in event_loop.next(&mut events_loop) {
 
@@ -107,16 +167,60 @@ fn main() {
 
                     glium::glutin::WindowEvent::KeyboardInput { input, .. } => {
                         if let glium::glutin::ElementState::Pressed = input.state {
+
+
+                            match app.kb_mode {
+                                KeyboardMode::QWERTY => {
+                                    for i in 0..keyboard_keys.len() {
+                                        if input.virtual_keycode == Some(keyboard_keys[i]) {
+                                            if (app.selected_octave*12 + i as i8) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = app.selected_octave*12 + i as i8;
+                                                app.preview_update = 10;
+                                            }
+                                        }
+                                    };
+                                    for i in 0..keyboard_keys_nr.len() {
+                                        if input.virtual_keycode == Some(keyboard_keys_nr[i]) {
+                                            //player.instrument_notes[player.inst_id as usize] = i as i8;
+                                            app.selected_octave = i as i8;
+                                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12;
+                                                app.preview_update = 10;
+                                            }
+                                        }
+                                    };
+                                },
+                                KeyboardMode::QWERTZ => {
+                                    for i in 0..keyboard_keys.len() {
+                                        if input.virtual_keycode == Some(_keyboard_keys_qwertz[i]) {
+                                            if (app.selected_octave*12 + i as i8) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = app.selected_octave*12 + i as i8;
+                                                app.preview_update = 10;
+                                            }
+                                        }
+                                    };
+                                    for i in 0..keyboard_keys_nr.len() {
+                                        if input.virtual_keycode == Some(keyboard_keys_nr[i]) {
+                                            //player.instrument_notes[player.inst_id as usize] = i as i8;
+                                            app.selected_octave = i as i8;
+                                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12) < 96 {
+                                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave*12;
+                                                app.preview_update = 10;
+                                            }
+                                        }
+                                    };
+                                },                                
+
+                                _ => {}
+                            }
+
                             match input.virtual_keycode {
                                 Some(glium::glutin::VirtualKeyCode::LShift) => {
                                     app.shift_key = true;
                                 },
-                                Some(glium::glutin::VirtualKeyCode::C) => {
-                                    app.copy_key = true;
-                                },
                                 Some(glium::glutin::VirtualKeyCode::Return) => {
                                     player.key_return();
-                                }
+                                },
                                 Some(glium::glutin::VirtualKeyCode::Space) => {
                                     player.key_space();
                                 },
@@ -128,10 +232,7 @@ fn main() {
                             match input.virtual_keycode {
                                 Some(glium::glutin::VirtualKeyCode::LShift) => {
                                     app.shift_key = false;
-                                },
-                                Some(glium::glutin::VirtualKeyCode::C) => {
-                                    app.copy_key = false;
-                                },
+                                }
 
                                 _ => {}
                             }

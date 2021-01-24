@@ -25,16 +25,22 @@ use crate::instrument::{Instrument, BaseMode};
 pub const WIN_W: u32 = (1920.0 * 0.85) as u32;
 pub const WIN_H: u32 = (1080.0 * 0.775) as u32;
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+pub enum KeyboardMode {
+    Off,
+    QWERTY,    
+    QWERTZ,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DemoApp {
     session_name: String,
     pub preview_update: u8,
     pub osc_select: [u8; 16],   
 
-    pub curve_t: f64,
-    pub curve_s: f64, 
+    pub kb_mode: KeyboardMode,
+    pub selected_octave: i8,
 
-    pub copy_key: bool,
     pub paste_key: bool,
     pub shift_key: bool,
 
@@ -53,12 +59,12 @@ impl DemoApp {
         DemoApp {
             session_name: "default".to_string(),
             preview_update: 10,
-            osc_select: [0; 16],    
-            curve_t: 0.5,
-            curve_s: 0.0,       
+            osc_select: [0; 16],
+
+            kb_mode: KeyboardMode::QWERTY,    
+            selected_octave: 0,  
 
             paste_key: false,
-            copy_key: false,
             shift_key: false,
 
             copy_patch: Instrument::new("copy1".to_string()),
@@ -68,6 +74,10 @@ impl DemoApp {
             copy_seq: vec![0; 64],
             copy_patch_seq: vec![0; 64],
         }
+    }
+
+    pub fn set_note(&mut self, note: u8) {
+
     }
 
     pub fn save_session(&mut self, session_name: &String) -> std::io::Result<()> {
@@ -274,8 +284,7 @@ widget_ids! {
         grid2,
         plot2,   
 
-        curve_t,
-        curve_s,     
+        kbd_mode,
     }
 }
 
@@ -311,6 +320,8 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         ];
 
     let tick_scales = ["1/16", "1/32", "1/64"];
+
+    let kbd_modes = [" off ", "QWERTY", "QWERTZ"];
 
     if app.preview_update > 0 
     {
@@ -1516,6 +1527,24 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         .top_left_with_margin_on(ids.canvas, 0.0)
         .down_from(ids.trackborder[2], WIDGET_DISTANCE)
         .set(ids.kbd_title, ui);
+
+    for selected in widget::DropDownList::new(&kbd_modes, Some(app.kb_mode as usize))
+        .top_left_with_margin_on(ids.canvas, 0.0)
+        //.down_from(ids.attack_hold, WIDGET_SIZE*0.5)
+        .down_from(ids.trackborder[2], WIDGET_DISTANCE*0.5)
+        .right(WIDGET_SIZE*2.0)
+        .w_h(WIDGET_SIZE*5.0, WIDGET_SIZE)
+        .set(ids.kbd_mode, ui)
+    {
+
+        app.kb_mode = match selected {
+            1 => KeyboardMode::QWERTY,
+            2 => KeyboardMode::QWERTZ,
+            _ => KeyboardMode::Off,
+        };
+        app.preview_update = 10;
+    }
+
     let note_map = [
         0, 2, 4, 5, 7, 9, 11,
         1, 3, 6, 8, 10,
@@ -1531,7 +1560,9 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
             //let label = if i == 0 {format!("C{:?}", o)} else {"".to_string()};
             let note = ((octave+o as u8)*12 + note_map[i]) as i8;
             for _press in widget::Button::new()
-                .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::LIGHT_BLUE} else {conrod_core::color::WHITE})
+                .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::LIGHT_BLUE}
+                    else if app.kb_mode as usize == 0 || (app.selected_octave == o as i8) || ((app.selected_octave+1 == o as i8) && ((note%12) < 4)) {conrod_core::color::WHITE}
+                    else {conrod_core::color::GREY})
                 //.label(&label)
                 .mid_left_with_margin_on(ids.canvas, (key_d*i) as f64 + (7*key_d*o) as f64)
                 .down_from(ids.kbd_title, 8.0)
@@ -1540,6 +1571,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
             {
                 player.instrument_notes[player.inst_id as usize] = note;
+                app.selected_octave = o as i8;
                 app.preview_update = 10;
             }        
         }
@@ -1547,13 +1579,15 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         for i in 7..9 {
             let note = ((octave+o as u8)*12 + note_map[i]) as i8;
             for _press in widget::Button::new()
-                .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::BLUE} else {conrod_core::color::BLACK})
+                .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::BLUE} 
+                    else {conrod_core::color::BLACK})
                 .mid_left_with_margin_on(ids.canvas, ((key_d>>1) + key_d*(i-7)) as f64 + (7*key_d*o) as f64)
                 .down_from(ids.kbd_title, 8.0)
                 .w_h(key_w, 60.0)
                 .set(ids.kbd[o*12+i], ui)
             {
                 player.instrument_notes[player.inst_id as usize] = note;
+                app.selected_octave = o as i8;
                 app.preview_update = 10;
             }        
         }
@@ -1561,13 +1595,15 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         for i in 9..12 {
             let note = ((octave+o as u8)*12 + note_map[i]) as i8;
             for _press in widget::Button::new()
-                .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::BLUE} else {conrod_core::color::BLACK})
+                .color(if note == player.instrument_notes[player.inst_id as usize] {conrod_core::color::BLUE} 
+                    else {conrod_core::color::BLACK})
                 .mid_left_with_margin_on(ids.canvas, (key_d+(key_d>>1) + key_d*(i-7)) as f64 + (7*key_d*o) as f64)
                 .down_from(ids.kbd_title, 8.0)
                 .w_h(key_w, 60.0)
                 .set(ids.kbd[o*12+i], ui)
             {
                 player.instrument_notes[player.inst_id as usize] = note;
+                app.selected_octave = o as i8;
                 app.preview_update = 10;
             }        
         }    
