@@ -268,6 +268,8 @@ widget_ids! {
         filter_voice[],
         filter_type[],
 
+        filter_label[],
+
         seq_title,
 
         pattern_idx[],
@@ -297,8 +299,9 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     const SHAPE_GAP: conrod_core::Scalar = 50.0;
     const TITLE_SIZE: conrod_core::FontSize = 24;
     const SUBTITLE_SIZE: conrod_core::FontSize = 20;
-    const TEXT_SIZE: conrod_core::FontSize = 12;
+    const TEXT_SIZE_TINY: conrod_core::FontSize = 12;
     const TEXT_SIZE_MED: conrod_core::FontSize = 16;
+    const TEXT_SIZE_SMALL: conrod_core::FontSize = 14;
 
     const WIDGET_SIZE: f64 = 20.0;
     const WIDGET_DISTANCE: f64 = 16.0;
@@ -405,7 +408,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
 
     widget::Text::new("sidbang64 v0.6.1 / w4rp8 / 2021")
-        .font_size(TEXT_SIZE)
+        .font_size(TEXT_SIZE_TINY)
         .color(conrod_core::color::BLUE)
         .right(WIDGET_DISTANCE*39.0)
         .set(ids.app_title, ui);
@@ -1117,20 +1120,46 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }
 
 
+    ids.filter_label.resize(4, &mut ui.widget_id_generator()); 
+    widget::Text::new("Filter Chn.:")
+        .font_size(TEXT_SIZE_SMALL)
+        .right_from(ids.osc3_wav, WIN_W as f64 * 0.5 - (WIDGET_SIZE*1.5))
+        .parent(ids.canvas)
+        .set(ids.filter_label[0], ui);
+
+    widget::Text::new("Filter Type:")
+        .font_size(TEXT_SIZE_SMALL)
+        .down_from(ids.filter_label[0], WIDGET_SIZE*0.8)
+        .parent(ids.canvas)
+        .set(ids.filter_label[1], ui);
+
+    widget::Text::new("Freq:")
+        .font_size(TEXT_SIZE_SMALL)
+        .down_from(ids.filter_label[1], WIDGET_SIZE*0.8)
+        .parent(ids.canvas)
+        .set(ids.filter_label[2], ui);
+
+    widget::Text::new("Reso:")
+        .font_size(TEXT_SIZE_SMALL)
+        .down_from(ids.filter_label[2], WIDGET_SIZE*0.8)
+        .parent(ids.canvas)
+        .set(ids.filter_label[3], ui);        
+
+
     ids.filter_voice.resize(3, &mut ui.widget_id_generator());  
     let mut i = 0;
     for &id in ids.filter_voice.iter() {        
         for selected in widget::Toggle::new(
-            player.filter_mask & (1<<(2-i)) != 0)
-            .right_from(ids.osc3_wav, WIN_W as f64 * 0.5 + (WIDGET_SIZE+2.0) * i as f64)
+            player.filter_mask & (1<<(i)) != 0)
+            .right_from(ids.osc3_wav, WIN_W as f64 * 0.5 + (WIDGET_SIZE*3.0) + (WIDGET_SIZE+2.0) * i as f64)
             .w_h(WIDGET_SIZE, WIDGET_SIZE)
             .set(id, ui)
         {
             if selected {
-                player.filter_mask |= 1<<(2-i);
+                player.filter_mask |= 1<<(i);
             }
             else {
-                player.filter_mask &= 0x7 ^ (1<<(2-i));
+                player.filter_mask &= 0x7 ^ (1<<(i));
             }
             //app.preview_update = 10;
         }   
@@ -1142,7 +1171,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     for &id in ids.filter_type.iter() {        
         for selected in widget::Toggle::new(
             player.filter_type & (1<<(2-i)) != 0)
-            .right_from(ids.osc1_wav, WIN_W as f64 * 0.5 + (WIDGET_SIZE+2.0) * i as f64)
+            .right_from(ids.osc1_wav, WIN_W as f64 * 0.5 + (WIDGET_SIZE*3.0) + (WIDGET_SIZE+2.0) * i as f64)
             .w_h(WIDGET_SIZE, WIDGET_SIZE)
             .set(id, ui)
         {
@@ -1159,7 +1188,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
     for dialed in widget::Slider::new(player.filter_freq as f64, 0.0, 0x7ff as f64)
         //.right_from(ids.osc3_wav, WIN_W as f64 * 0.5)
-        .down_from(ids.filter_type[0],  WIDGET_SIZE*0.5)
+        .down_from(ids.filter_type[0], WIDGET_SIZE*0.5)
         .w_h(WIDGET_SIZE*10.0, WIDGET_SIZE)
         .label(&format!("f: {}", player.filter_freq))
         .set(ids.filter_freq, ui)
@@ -1170,7 +1199,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }   
 
     for dialed in widget::Slider::new(player.filter_res as f64, 0.0, 0xf as f64)
-        .down_from(ids.filter_freq,  WIDGET_SIZE*0.5)
+        .down_from(ids.filter_freq, WIDGET_SIZE*0.5)
         .w_h(WIDGET_SIZE*5.0, WIDGET_SIZE)
         .label(&format!("r: {}", player.filter_res))
         .set(ids.filter_res, ui)
@@ -1523,7 +1552,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     let nstr = note_names[note as usize].to_string();
     let label = format!("Note: {}{}", nstr, ostr);
     widget::Text::new(&label)
-        .font_size(TEXT_SIZE)
+        .font_size(TEXT_SIZE_TINY)
         .top_left_with_margin_on(ids.canvas, 0.0)
         .down_from(ids.trackborder[2], WIDGET_DISTANCE)
         .set(ids.kbd_title, ui);
