@@ -32,7 +32,7 @@ pub enum KeyboardMode {
     QWERTZ,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+//#[derive(Serialize, Deserialize, Debug)]
 pub struct DemoApp {
     session_name: String,
     pub preview_update: u8,
@@ -50,6 +50,9 @@ pub struct DemoApp {
 
     pub copy_seq: Vec<i8>,
     pub copy_patch_seq: Vec<i8>,  
+
+    pub input_keycode: Option<glium::glutin::VirtualKeyCode>,
+    pub input_delay: u8,
 }
 
 
@@ -73,13 +76,16 @@ impl DemoApp {
 
             copy_seq: vec![0; 64],
             copy_patch_seq: vec![0; 64],
+
+            input_keycode: None,
+            input_delay: 0,
         }
     }
 
     pub fn set_note(&mut self, note: u8) {
 
     }
-
+/*
     pub fn save_session(&mut self, session_name: &String) -> std::io::Result<()> {
         let path_name = format!("./bng/{}", session_name);
         if !Path::new(&path_name).exists() {
@@ -115,7 +121,9 @@ impl DemoApp {
         }
         Ok(())
     }       
+*/
 }
+
 
 /// A set of reasonable stylistic defaults that works for the `gui` below.
 pub fn theme() -> conrod_core::Theme {
@@ -348,7 +356,8 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         .w_h(WIDGET_SIZE*9.0, WIDGET_SIZE)
         .set(ids.session_name, ui)
     {
-        app.session_name = edit;        
+        app.session_name = edit;       
+        app.input_delay = 0; 
     }
 
     for _press in widget::Button::new()
@@ -1639,4 +1648,127 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }
 
     widget::Scrollbar::y_axis(ids.canvas).auto_hide(true).set(ids.canvas_scrollbar, ui);
+
+    let keyboard_keys = [
+        glium::glutin::VirtualKeyCode::A,
+        glium::glutin::VirtualKeyCode::W,
+        glium::glutin::VirtualKeyCode::S,
+
+        glium::glutin::VirtualKeyCode::E,
+        glium::glutin::VirtualKeyCode::D,
+        glium::glutin::VirtualKeyCode::F,
+
+        glium::glutin::VirtualKeyCode::T,
+        glium::glutin::VirtualKeyCode::G,
+        glium::glutin::VirtualKeyCode::Y,
+
+        glium::glutin::VirtualKeyCode::H,
+        glium::glutin::VirtualKeyCode::U,
+        glium::glutin::VirtualKeyCode::J,
+
+        glium::glutin::VirtualKeyCode::K,
+        glium::glutin::VirtualKeyCode::O,
+        glium::glutin::VirtualKeyCode::L,
+
+        glium::glutin::VirtualKeyCode::P,
+    ];
+
+    let _keyboard_keys_qwertz = [
+        glium::glutin::VirtualKeyCode::A,
+        glium::glutin::VirtualKeyCode::W,
+        glium::glutin::VirtualKeyCode::S,
+
+        glium::glutin::VirtualKeyCode::E,
+        glium::glutin::VirtualKeyCode::D,
+        glium::glutin::VirtualKeyCode::F,
+
+        glium::glutin::VirtualKeyCode::T,
+        glium::glutin::VirtualKeyCode::G,
+        glium::glutin::VirtualKeyCode::Z,
+
+        glium::glutin::VirtualKeyCode::H,
+        glium::glutin::VirtualKeyCode::U,
+        glium::glutin::VirtualKeyCode::J,
+
+        glium::glutin::VirtualKeyCode::K,
+        glium::glutin::VirtualKeyCode::O,
+        glium::glutin::VirtualKeyCode::L,
+
+        glium::glutin::VirtualKeyCode::P,            
+    ];
+
+    let keyboard_keys_nr = [
+        glium::glutin::VirtualKeyCode::Key1,
+        glium::glutin::VirtualKeyCode::Key2,
+        glium::glutin::VirtualKeyCode::Key3,
+        glium::glutin::VirtualKeyCode::Key4,
+        glium::glutin::VirtualKeyCode::Key5,
+        glium::glutin::VirtualKeyCode::Key6,
+        glium::glutin::VirtualKeyCode::Key7,
+        glium::glutin::VirtualKeyCode::Key8,
+
+    ];        
+
+
+
+    if app.input_delay > 0 {
+        app.input_delay -= 1;
+
+        if app.input_delay == 0 {
+            match app.input_keycode{
+                Some(glium::glutin::VirtualKeyCode::Return) => {
+                    player.key_return();
+                },
+                Some(glium::glutin::VirtualKeyCode::Space) => {
+                    player.key_space();
+                },
+                _ => {}
+            }
+
+            match app.kb_mode {
+                KeyboardMode::QWERTY => {
+                    for i in 0..keyboard_keys.len() {
+                        if app.input_keycode == Some(keyboard_keys[i]) {
+                            if (app.selected_octave[player.inst_id as usize]*12 + i as i8) < 96 {
+                                player.instrument_notes[player.inst_id as usize] = app.selected_octave[player.inst_id as usize]*12 + i as i8;
+                                app.preview_update = 10;
+                            }
+                        }
+                    };
+                    for i in 0..keyboard_keys_nr.len() {
+                        if app.input_keycode == Some(keyboard_keys_nr[i]) {
+                            //player.instrument_notes[player.inst_id as usize] = i as i8;
+                            app.selected_octave[player.inst_id as usize] = i as i8;
+                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12) < 96 {
+                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12;
+                                app.preview_update = 10;
+                            }
+                        }
+                    };
+                },
+                KeyboardMode::QWERTZ => {
+                    for i in 0..keyboard_keys.len() {
+                        if app.input_keycode == Some(_keyboard_keys_qwertz[i]) {
+                            if (app.selected_octave[player.inst_id as usize]*12 + i as i8) < 96 {
+                                player.instrument_notes[player.inst_id as usize] = app.selected_octave[player.inst_id as usize]*12 + i as i8;
+                                app.preview_update = 10;
+                            }
+                        }
+                    };
+                    for i in 0..keyboard_keys_nr.len() {
+                        if app.input_keycode == Some(keyboard_keys_nr[i]) {
+                            //player.instrument_notes[player.inst_id as usize] = i as i8;
+                            app.selected_octave[player.inst_id as usize] = i as i8;
+                            if (player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12) < 96 {
+                                player.instrument_notes[player.inst_id as usize] = player.instrument_notes[player.inst_id as usize] % 12 + app.selected_octave[player.inst_id as usize]*12;
+                                app.preview_update = 10;
+                            }
+                        }
+                    };
+                },                                
+
+                _ => {}
+            }
+        }    
+    }
 }
