@@ -51,6 +51,9 @@ pub struct DemoApp {
     pub copy_seq: Vec<i8>,
     pub copy_patch_seq: Vec<i8>,  
 
+    pub copy_pattern: [i16; 3],
+    pub copy_patch_pattern: [i16; 3],
+
     pub input_keycode: Option<glium::glutin::VirtualKeyCode>,
     pub input_delay: u8,
 }
@@ -74,8 +77,11 @@ impl DemoApp {
             copy_osc_patch_id: 0,
             copy_osc_patch: Instrument::new("copy2".to_string()),            
 
-            copy_seq: vec![0; 64],
-            copy_patch_seq: vec![0; 64],
+            copy_seq: vec![-1; 64],
+            copy_patch_seq: vec![-1; 64],
+
+            copy_pattern: [0; 3],
+            copy_patch_pattern: [0; 3],
 
             input_keycode: None,
             input_delay: 0,
@@ -241,8 +247,15 @@ widget_ids! {
         song_length_display,
         song_mode_select,
 
+        insert_loop,
+        delete_loop,
+
+        copy_loop,
+        paste_loop,
+
         copy_pattern,
         paste_pattern,
+
 
 
         mute[],
@@ -556,100 +569,6 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
 
    
-/*
-    let min_x = 0.0;
-    let max_x = 1.0;
-    let min_y = 0.0;
-    let max_y = 1.0;
-
-    let quarter_lines = widget::grid::Lines::step(0.5).thickness(2.0);
-    let sixteenth_lines = widget::grid::Lines::step(0.25).thickness(0.5);
-    let lines = &[
-        quarter_lines.x(),
-        quarter_lines.y(),
-        sixteenth_lines.x(),
-        sixteenth_lines.y(),
-    ];
-
-    let c = BiasGainCurve::new(app.curve_s, app.curve_t);
-    let get_y2 = |x:f64| -> f64 {
-        c.y(x)
-    };
-
-    widget::Grid::new(min_x, max_x, min_y, max_y, lines.iter().cloned())
-        .color(conrod_core::color::rgb(0.1, 0.12, 0.15))
-        .right(WIDGET_DISTANCE * 1.0)
-        .w_h(WIDGET_SIZE*8.0, WIDGET_SIZE*8.0)
-        .set(ids.grid2, ui);
-    widget::PlotPath::new(min_x, max_x, min_y, max_y, get_y2)
-        .color(conrod_core::color::LIGHT_BLUE)
-        .thickness(1.0)
-        .wh_of(ids.grid2)
-        .middle_of(ids.grid2)
-        .set(ids.plot2, ui)
-        ;
-*/
-
-    //------------------------------------------------------------
-/*
-    for dialed in widget::Slider::new(app.curve_t, 0.0, 1.0)
-        .top_left_with_margin_on(ids.canvas, 0.0)
-        .down_from(ids.attack, WIDGET_SIZE*0.5)
-        .w_h(WIDGET_SIZE*4.0, WIDGET_SIZE)
-        .label(&format!("t: {:.2}", app.curve_t))
-        .set(ids.curve_t, ui)
-    {
-        app.curve_t = dialed;
-    }  
-
-    for dialed in widget::Slider::new(app.curve_s, -128.0, 128.0)
-        .right(WIDGET_DISTANCE)
-        .w_h(WIDGET_SIZE*4.0, WIDGET_SIZE)
-        .label(&format!("s: {:.1}", app.curve_s))
-        .set(ids.curve_s, ui)
-    {
-        app.curve_s = dialed;
-    } 
-*/
-/*
-    for dialed in widget::NumberDialer::new(player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[0] as f64, 0.0, 8000.0, 0)
-        .top_left_with_margin_on(ids.canvas, 0.0)
-        .down_from(ids.attack, WIDGET_SIZE*0.5)
-        .w_h(WIDGET_SIZE*2.0, WIDGET_SIZE)
-        .set(ids.attack_hold, ui)
-    {
-        player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[0] = dialed as u32;
-        app.preview_update = 10;
-    }
-
-    for dialed in widget::NumberDialer::new(player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[1] as f64, 0.0, 8000.0, 0)
-        .right(WIDGET_DISTANCE)
-        .w_h(WIDGET_SIZE*2.0, WIDGET_SIZE)
-        .set(ids.decay_hold, ui)
-    {
-        player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[1] = dialed as u32;
-        app.preview_update = 10;
-    }
-
-    for dialed in widget::NumberDialer::new(player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[2] as f64, 0.0, 8000.0, 0)
-        .right(WIDGET_DISTANCE)
-        .w_h(WIDGET_SIZE*2.0, WIDGET_SIZE)
-        .set(ids.sustain_hold, ui)
-    {
-        player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[2] = dialed as u32;
-        app.preview_update = 10;
-    }
-
-    for dialed in widget::NumberDialer::new(player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[3] as f64, 0.0, 8000.0, 0)
-        .right(WIDGET_DISTANCE)
-        .w_h(WIDGET_SIZE*2.0, WIDGET_SIZE)
-        .set(ids.release_hold, ui)
-    {
-        player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_hold[3] = dialed as u32;
-        app.preview_update = 10;
-    }   
-*/
-
     for selected in widget::DropDownList::new(&list_count4, Some(player.instruments[player.inst_id as usize][player.inst_patch_id[player.inst_id as usize] as usize].osc_map[0] as usize))
         .top_left_with_margin_on(ids.canvas, 0.0)
         //.down_from(ids.attack_hold, WIDGET_SIZE*0.5)
@@ -1275,39 +1194,11 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }
 
 
-    for _press in widget::Button::new()
-        .right(WIDGET_DISTANCE*4.0)
-        .color(conrod_core::color::BLUE)
-        .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
-        .label(&format!("COPY"))
-        .set(ids.copy_pattern, ui)
-    {
-        for i in 0..64 {
-            app.copy_seq[i] = player.get_trigger(player.inst_id as u32, i);
-            app.copy_patch_seq[i] = player.get_patch(player.inst_id as u32, i);
-        }
-    }
-
-
-    for _press in widget::Button::new()
-        .right(WIDGET_DISTANCE*1.0)
-        .color(conrod_core::color::RED)
-        .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
-        .label(&format!("PASTE"))
-        .set(ids.paste_pattern, ui)
-    {
-        for i in 0..64 {
-            player.set_trigger(player.inst_id as u32, i, app.copy_seq[i]);
-            player.set_patch(player.inst_id as u32, i, app.copy_patch_seq[i]);
-        }
-    }
-
-
 
     for _press in widget::Button::new()
         .color(if player.song_mode {conrod_core::color::LIGHT_RED} else {conrod_core::color::BLUE})
         .label(if player.song_mode{"Song"} else {"Loop"})
-        .right(WIDGET_DISTANCE*16.0)
+        .right(WIDGET_DISTANCE*4.0)
         .w_h(WIDGET_SIZE*4.4, WIDGET_SIZE)
         .set(ids.song_mode_select, ui)
     {
@@ -1315,10 +1206,72 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }
 
 
+    if !player.song_mode {
+        for _press in widget::Button::new()
+            .right(WIDGET_DISTANCE*2.0)
+            .color(conrod_core::color::BLUE)
+            .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+            .label(&format!("INS"))
+            .set(ids.insert_loop, ui)
+        {
+            for i in 0..63-player.pattern_idx as usize {
+                for j in 0..3 {
+                    player.track.patterns[63-i][j] = player.track.patterns[62-i][j];
+                    player.track.patch_patterns[63-i][j] = player.track.patch_patterns[62-i][j];
+                }
+            }
+            if player.pattern_idx < 63 {
+                player.pattern_idx += 1;
+            }
+        }
 
-    if player.song_mode {
+
+        for _press in widget::Button::new()
+            .right(WIDGET_DISTANCE*1.0)
+            .color(conrod_core::color::RED)
+            .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+            .label(&format!("DEL"))
+            .set(ids.delete_loop, ui)
+        {
+            for i in player.pattern_idx as usize..63 {
+                for j in 0..3 {
+                    player.track.patterns[i][j] = player.track.patterns[i+1][j];
+                    player.track.patch_patterns[i][j] = player.track.patch_patterns[i+1][j];
+                }
+            }
+        }
+
+
+        for _press in widget::Button::new()
+            .right(WIDGET_DISTANCE*2.0)
+            .color(conrod_core::color::BLUE)
+            .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+            .label(&format!("COPY"))
+            .set(ids.copy_loop, ui)
+        {
+            for i in 0..3 {
+                app.copy_pattern[i] = player.track.patterns[player.pattern_idx as usize][i];
+                app.copy_patch_pattern[i] = player.track.patch_patterns[player.pattern_idx as usize][i];
+            }
+        }
+
+
+        for _press in widget::Button::new()
+            .right(WIDGET_DISTANCE*1.0)
+            .color(conrod_core::color::RED)
+            .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+            .label(&format!("PASTE"))
+            .set(ids.paste_loop, ui)
+        {
+            for i in 0..3 {
+                player.track.patterns[player.pattern_idx as usize][i] = app.copy_pattern[i];
+                player.track.patch_patterns[player.pattern_idx as usize][i] = app.copy_patch_pattern[i];
+            }
+        }
+    }
+    else {
         for dialed in widget::NumberDialer::new(player.start_pattern as f64, 0.0, 63.0, 0)
-            .right(WIDGET_DISTANCE)
+            .right(WIDGET_DISTANCE*2.0)
             .parent(ids.canvas)
             .w_h(WIDGET_SIZE*1.8, WIDGET_SIZE)
             .set(ids.start_pattern_select, ui)
@@ -1376,6 +1329,35 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         }   
     }
 
+
+    for _press in widget::Button::new()
+        .down_from(ids.pattern_idx[0], 14.0)
+        .color(conrod_core::color::BLUE)
+        .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+        .label(&format!("COPY"))
+        .set(ids.copy_pattern, ui)
+    {
+        for i in 0..64 {
+            app.copy_seq[i] = player.get_trigger(player.inst_id as u32, i);
+            app.copy_patch_seq[i] = player.get_patch(player.inst_id as u32, i);
+        }
+    }
+
+
+    for _press in widget::Button::new()
+        .right(WIDGET_DISTANCE*1.0)
+        .color(conrod_core::color::RED)
+        .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+        .label(&format!("PASTE"))
+        .set(ids.paste_pattern, ui)
+    {
+        for i in 0..64 {
+            player.set_trigger(player.inst_id as u32, i, app.copy_seq[i]);
+            player.set_patch(player.inst_id as u32, i, app.copy_patch_seq[i]);
+        }
+    }
+
+
     let inst_prev = player.inst_id;
 
     ids.trackborder.resize(3, &mut ui.widget_id_generator());
@@ -1386,7 +1368,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
     ids.seq1.resize(64*16, &mut ui.widget_id_generator());
 
-    let y_offset = WIDGET_SIZE+WIDGET_DISTANCE*2.0;
+    let y_offset = WIDGET_SIZE+WIDGET_DISTANCE*3.0;
 
     for s in 0..6 {
         let play_index = (player.play_index>>16)%64;
