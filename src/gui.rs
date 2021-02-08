@@ -429,7 +429,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }  
 
 
-    widget::Text::new("sidbang64 v0.6.1 / w4rp8 / 2021")
+    widget::Text::new("sidbang64 v0.6.2 / w4rp8 / 2021")
         .font_size(TEXT_SIZE_TINY)
         .color(conrod_core::color::BLUE)
         .right(WIDGET_DISTANCE*39.0)
