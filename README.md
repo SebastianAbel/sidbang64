@@ -14,8 +14,16 @@ build:
 have fun:
 - `./target/release/sidbang64`
 
+show options:
+- `./target/release/sidbang64 --help`
 
-## changelog:
+## history:
+
+0.6.2:
+- insert/delete and copy/paste for entries in the loop-sequence
+- moved copy/paste button for pattern below the loop-sequence
+- added command line arguments
+- disabled the default vsync
 
 0.6.1:
 - set active note via keyboard input

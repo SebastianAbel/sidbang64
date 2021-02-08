@@ -7,6 +7,9 @@ extern crate conrod_winit;
 extern crate find_folder;
 extern crate glium;
 extern crate image;
+extern crate argparse;
+
+
 
 #[allow(unused_imports)]
 use std::{thread, time};
@@ -22,9 +25,45 @@ use gui::{WIN_W, WIN_H};
 use conrod_glium::Renderer;
 use glium::Surface;
 use sid_player::SidPlayer;
-
+use argparse::{ArgumentParser, StoreFalse, StoreTrue, Store};
 
 fn main() {
+
+    let mut sidmodel = 1;
+    let mut buffersize = 20;
+    let mut vsync = false;
+    let mut multisampling = true;
+    let mut multisampling_param = 4;
+    let mut resampling = 0;
+    let mut filter = true;
+    {  // this block limits scope of borrows by ap.refer() method
+        let mut ap = ArgumentParser::new();
+        ap.set_description("2020/2021 w4rp8");
+        ap.refer(&mut sidmodel)
+            .add_option(&["-s", "--sidmodel"], Store,
+            "0=6581/1=8580 (default: 1)");
+        ap.refer(&mut resampling)
+            .add_option(&["-r", "--resampling"], Store,
+            "0=fast/1=interpolate/2=resample/3=resample_fast (default: 0)");    
+        ap.refer(&mut filter)
+            .add_option(&["--no_filter"], StoreFalse,
+            "disable filter");                             
+        ap.refer(&mut buffersize)
+            .add_option(&["-b", "--buffersize"], Store,
+            "size of audiobuffer in ms (min/default: 20)");
+        ap.refer(&mut vsync)
+            .add_option(&["-v", "--vsync"], StoreTrue,
+            "enable vsynch for the gui");
+        ap.refer(&mut multisampling)
+            .add_option(&["--no_multisampling"], StoreFalse,
+            "disable multisampling in the gui");   
+        ap.refer(&mut multisampling_param)
+            .add_option(&["-m", "--multisampling"], Store,
+            "set multisampling (default: 4)");                        
+        ap.parse_args_or_exit();
+    }
+
+    println!("{}, {}, {}, {}, {}", sidmodel, buffersize, vsync, multisampling, multisampling_param);
 
     /*let thread_id = thread_native_id();
     assert!(set_thread_priority(thread_id,
@@ -37,8 +76,8 @@ fn main() {
         .with_title("sidbang64")
         .with_dimensions((WIN_W, WIN_H).into());
     let context = glium::glutin::ContextBuilder::new()
-        .with_vsync(true)
-        .with_multisampling(4);
+        .with_vsync(vsync)
+        .with_multisampling(if multisampling {multisampling_param} else {0});
     let display = glium::Display::new(window, context, &events_loop).unwrap();
     let display = support::GliumDisplayWinitWrapper(display);
 
@@ -68,7 +107,7 @@ fn main() {
     // - a `Vec` of commands that describe how to draw the vertices.
     let mut renderer = Renderer::new(&display.0).unwrap();
 
-    let mut player = SidPlayer::new();
+    let mut player = SidPlayer::new(sidmodel, resampling, filter, f64::max(0.2, buffersize as f64/1000.0));
     
     player.playback();
 

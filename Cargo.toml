@@ -1,6 +1,6 @@
 [package]
 name = "sidbang64"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["sab@goarana.com"]
 edition = "2018"
 
@@ -25,6 +25,7 @@ glium = "0.24"
 winit = "0.19"
 image = "0.23.12"
 rand = "0.8.3"
+argparse = "0.2.2"
 hound = "3.4.0"
 rustfft = "5.0.1"
 

@@ -212,7 +212,7 @@ pub struct SidPlayer {
 
 impl SidPlayer {
 
-	pub fn new() -> Self {
+	pub fn new(sidmodel: u8, resampling: u8, filter: bool, buffersize: f64) -> Self {
 		let host = cpal::default_host();
 
 		let device = host.default_output_device().expect("Failed to get default output device");
@@ -228,7 +228,7 @@ impl SidPlayer {
 	    let sample_rate = output_format.sample_rate.0 as u32;
 	    //println!("{:?}", output_format);
 
-	    let sample_time = 0.1;
+	    let sample_time = buffersize as f32;
 	    let sample_length = (sample_time * sample_rate as f32) as usize;
 
 	    let t_buffer = TripleBuffer::new(vec![0f32; sample_length+1024]);
@@ -246,8 +246,8 @@ impl SidPlayer {
    		let preview_length = 44100*2;
 
 	    let mut player = SidPlayer {
-	    	resid: Sid::new(resid::ChipModel::Mos8580),
-	    	resid2: Sid::new(resid::ChipModel::Mos8580),
+	    	resid: Sid::new(if sidmodel == 0 {resid::ChipModel::Mos6581} else {resid::ChipModel::Mos8580}),
+	    	resid2: Sid::new(if sidmodel == 0 {resid::ChipModel::Mos6581} else {resid::ChipModel::Mos8580}),
 
 	    	device: device,
 	    	sample_rate: sample_rate,
@@ -314,10 +314,10 @@ impl SidPlayer {
 	  	};
 	  	player.set_speed_from_ticks(70.0);
 
-		player.resid.set_sampling_parameters(SamplingMethod::Fast, 985_248, sample_rate);
+		player.resid.set_sampling_parameters(match resampling{1=>SamplingMethod::Interpolate,2=>SamplingMethod::Resample,3=>SamplingMethod::ResampleFast,_=> SamplingMethod::Fast}, 985_248, sample_rate);
 		//player.resid.reset(); 
 		player.resid.enable_external_filter(false);
-		player.resid.enable_filter(true);
+		player.resid.enable_filter(filter);
 
 		
 
