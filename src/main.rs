@@ -63,13 +63,6 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    println!("{}, {}, {}, {}, {}", sidmodel, buffersize, vsync, multisampling, multisampling_param);
-
-    /*let thread_id = thread_native_id();
-    assert!(set_thread_priority(thread_id,
-                                ThreadPriority::Max,
-                                ThreadSchedulePolicy::Normal(NormalThreadSchedulePolicy::Normal)).is_ok());
-    */
     // Build the window.
     let mut events_loop = glium::glutin::EventsLoop::new();
     let window = glium::glutin::WindowBuilder::new()
