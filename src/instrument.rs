@@ -346,7 +346,7 @@ impl Instrument {
 					}
 				}
 				else {
-					exp.kernel_type |= 0;
+					exp.kernel_type |= 1;
 					exp.bytes[0] = (frq_out&0xff) as u8;
 					exp.kernel_type |= 2;
 					exp.bytes[1] = (frq_out>>8) as u8;	

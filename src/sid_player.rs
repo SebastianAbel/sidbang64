@@ -681,6 +681,9 @@ impl SidPlayer {
 		
 		let mut idx_array =  vec![vec![vec![0 as u32; (self.ticks_per_16th as usize * 64)/quantsize as usize]; 3]; 64];
 
+		let mut sep_values = vec![[0 as u8; 256]; 6];
+		let mut sep_count = [0; 6];
+
 		if self.state == Playing
 		{		
 			self.key_space();
@@ -787,6 +790,9 @@ impl SidPlayer {
 						}															
 					}
 
+					sep_values[5][sep_count[5]] = ed_now.kernel_type;
+					sep_count[5] += 1;
+
 					//print!(".byte    {:?}", ed_now.kernel_type);
 					current_array[last_bytes_out as usize] = ed_now.kernel_type;
 					last_bytes_out += 1;
@@ -799,18 +805,28 @@ impl SidPlayer {
 						current_array[last_bytes_out as usize] = ed_now.bytes[6];
 						last_bytes_out += 1;
 						bytes_out += 2;
+
+						sep_values[4][sep_count[4]] = ed_now.bytes[5];
+						sep_values[4][sep_count[4]+1] = ed_now.bytes[6];
+						sep_count[4] += 2;
 					}					
 					if (ed_now.kernel_type & 1) != 0 {
 						//print!(", {:?}", ed_now.bytes[0]);
 						current_array[last_bytes_out as usize] = ed_now.bytes[0];
 						last_bytes_out += 1;
 						bytes_out += 1;
+
+						sep_values[0][sep_count[0]] = ed_now.bytes[0];
+						sep_count[0] += 1;						
 					}
 					if (ed_now.kernel_type & 2) != 0 {
 						//print!(", {:?}", ed_now.bytes[1]);
 						current_array[last_bytes_out as usize] = ed_now.bytes[1];
 						last_bytes_out += 1;						
 						bytes_out += 1;
+
+						sep_values[1][sep_count[1]] = ed_now.bytes[1];
+						sep_count[1] += 1;						
 					}
 					if (ed_now.kernel_type & 4) != 0 {
 						//print!(", {:?}, {:?}", ed_now.bytes[2], ed_now.bytes[3]);
@@ -819,12 +835,19 @@ impl SidPlayer {
 						current_array[last_bytes_out as usize] = ed_now.bytes[3];
 						last_bytes_out += 1;												
 						bytes_out += 2;
+
+						sep_values[2][sep_count[2]] = ed_now.bytes[2];
+						sep_values[2][sep_count[2]+1] = ed_now.bytes[3];
+						sep_count[2] += 2;						
 					}
 					if (ed_now.kernel_type & 8) != 0 {
 						//print!(", {:?} ", ed_now.bytes[4]);
 						current_array[last_bytes_out as usize] = ed_now.bytes[4];
 						last_bytes_out += 1;						
 						bytes_out += 1;
+
+						sep_values[3][sep_count[3]] = ed_now.bytes[4];
+						sep_count[3] += 1;
 					}
 
 					
@@ -849,6 +872,17 @@ impl SidPlayer {
 						}
 
 						last_bytes_out = 0;
+
+						for j in 0..6 {
+							/*print!("{}: ", sep_count[j]);
+							for i in 0..sep_count[j] {
+								print!("{}, ", sep_values[j][i]);
+							}*/
+							sep_count[j] = 0;
+							//println!();
+						}
+						//println!();
+						
 					}
 
 					ed_prev = ed;
