@@ -2,6 +2,9 @@
 
 2020/2021 - w4rp8
 
+source:
+- https://github.com/SebastianAbel/sidbang64
+
 install:
 - rust toolchain from https://www.rust-lang.org/tools/install
 - it's currently required to downgrade rust to 1.47 to produce a stable build:\
@@ -11,11 +14,12 @@ install:
 build:
 - `cargo build --release`
 
-have fun:
+run:
 - `./target/release/sidbang64`
 
 show options:
 - `./target/release/sidbang64 --help`
+
 
 ## history:
 
