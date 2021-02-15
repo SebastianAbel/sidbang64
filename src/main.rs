@@ -32,6 +32,7 @@ fn main() {
     let mut sidmodel = 1;
     let mut buffersize = 20;
     let mut vsync = false;
+    let mut hw_acc = true;
     let mut multisampling = true;
     let mut multisampling_param = 4;
     let mut resampling = 0;
@@ -51,6 +52,9 @@ fn main() {
         ap.refer(&mut buffersize)
             .add_option(&["-b", "--buffersize"], Store,
             "size of audiobuffer in ms (min/default: 20)");
+        ap.refer(&mut hw_acc)
+            .add_option(&["--no_accel"], StoreFalse,
+            "disable harware acceleration for the gui");
         ap.refer(&mut vsync)
             .add_option(&["-v", "--vsync"], StoreTrue,
             "enable vsynch for the gui");
@@ -70,7 +74,8 @@ fn main() {
         .with_dimensions((WIN_W, WIN_H).into());
     let context = glium::glutin::ContextBuilder::new()
         .with_vsync(vsync)
-        .with_multisampling(if multisampling {multisampling_param} else {0});
+        .with_multisampling(if multisampling {multisampling_param} else {0})
+        .with_hardware_acceleration(Some(hw_acc));
     let display = glium::Display::new(window, context, &events_loop).unwrap();
     let display = support::GliumDisplayWinitWrapper(display);
 

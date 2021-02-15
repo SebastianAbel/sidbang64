@@ -576,8 +576,9 @@ impl SidPlayer {
 			self.resid.write(0x16, ((self.filter_freq>>3) & 0xff) as u8);
 
 			self.resid.write(0x17, ((self.filter_res & 0x0f)<<4) | self.filter_mask);
-			self.resid.write(0x18, ((self.filter_type & 0x0f)<<4) | 0x0f);
-			
+			if self.state != Paused {
+				self.resid.write(0x18, ((self.filter_type & 0x0f)<<4) | 0x0f);
+			}
 			let (samples, _next_delta) = self.resid.sample((985248.0/(self.ticks_per_frame as f64 * TICK_FREQ)) as u32, &mut self.buffer[..], 1);
 		    for i in 0..samples {
 		        let sidsample = self.buffer[i] as f32 / std::i16::MAX as f32;
