@@ -670,6 +670,34 @@ impl SidPlayer {
 			}
 			result
 		};
+		fn find_slice_u32(data: &Vec<u32>, data_length: usize, slice: &Vec<u32>, slice_length: usize) -> i32 {
+			let mut i = 0;
+			let mut result = -1;
+			while i < data_length {
+				if slice_length > 0 {
+					if slice[0] == data[i] {
+						let mut j=i+1;
+						let mut k=1;
+						let mut found = true;
+						while (k<slice_length) && (j<data_length){
+							if slice[k] != data[j] {
+								found = false;
+								break;
+							}
+							k += 1;
+							j += 1;
+						}
+						found &= (k == slice_length) && (j<=data_length);
+						if found {
+							result = i as i32;
+							i = data_length;
+						}
+					}
+				}
+				i += 1;
+			}
+			result
+		};		
 
 		let quantsize = self.export_quantsize as u32;
 
@@ -681,8 +709,17 @@ impl SidPlayer {
 		
 		let mut idx_array =  vec![vec![vec![0 as u32; (self.ticks_per_16th as usize * 64)/quantsize as usize]; 3]; 64];
 
-		let mut sep_values = vec![[0 as u8; 256]; 6];
+		let mut sep_values = vec![vec![0 as u8; 256*4]; 6];
 		let mut sep_count = [0; 6];
+
+		let mut sep_stream = vec![vec![0 as u8; 256*256]; 6];
+		let mut sep_stream_count = [0; 6];
+
+		let mut sep_idx_array =  vec![vec![vec![vec![0 as u32; (self.ticks_per_16th as usize * 64)/quantsize as usize]; 6]; 3]; 64];
+		let mut sep_out_count = 0;
+		let mut sep_idx_array_packed =  vec![0 as u32; 256*256];
+		let mut sep_idx_pack_count = 0;
+		let mut sep_idx_array_ptr =  vec![vec![vec![0 as u32; (self.ticks_per_16th as usize * 64)/quantsize as usize]; 3]; 64];
 
 		if self.state == Playing
 		{		
@@ -874,6 +911,29 @@ impl SidPlayer {
 						last_bytes_out = 0;
 
 						for j in 0..6 {
+							if sep_count[j] == 0 {
+								sep_idx_array[pattern_ctr][channel][j][(tick_counter/quantsize) as usize] = 0;
+								//sep_out_count += 2;
+							}
+							else {	
+								let idx = find_slice(&(sep_stream[j]), sep_stream_count[j], &sep_values[j], sep_count[j]);
+								if (idx < 0)
+								{
+									for i in 0..sep_count[j] {
+										sep_stream[j][sep_stream_count[j]+i] = sep_values[j][i];
+									}
+
+									sep_idx_array[pattern_ctr][channel][j][(tick_counter/quantsize) as usize] = sep_stream_count[j] as u32;
+									sep_stream_count[j] += sep_count[j];
+
+									sep_out_count += sep_count[j];//+2;
+								}
+								else {
+									sep_idx_array[pattern_ctr][channel][j][(tick_counter/quantsize) as usize] = idx as u32;
+									//sep_out_count += 2;
+								}
+							}
+
 							/*print!("{}: ", sep_count[j]);
 							for i in 0..sep_count[j] {
 								print!("{}, ", sep_values[j][i]);
@@ -895,8 +955,9 @@ impl SidPlayer {
 				pattern_idx += 1;
 				pattern_ctr += 1;
 			}
-		}
 
+		}
+		
 
 
 		let path_name = format!("./bng");
@@ -950,9 +1011,162 @@ impl SidPlayer {
 			}
 			writeln!(asm_file);
 			writeln!(asm_file);
+
+
+		}
+/*
+		for channel in 0..6 {
+			println!("stream_{}:", channel+1);
+			println!();
+	
+			for i in 0..sep_stream_count[channel] {
+				if (i&15) == 0 {
+					print!(".byte    {:?}", sep_stream[channel][i]);
+				} 
+				else {
+					print!(", {:?}", sep_stream[channel][i]);
+				}
+				if (i&15) == 15 {
+					println!();
+				}
+				if (i&255) == 255 {
+					println!();
+				}
+			}
+			println!();
 		}
 
+		let store5 = true;
+		if store5 { 
+			for channel in 0..3 {
+				for j in 0..patterns as usize {
+					if packed_index[channel][j] as usize == j {
+						for i in 0..(self.ticks_per_16th as usize * 64)/quantsize as usize {
+							let current_slice = vec![sep_idx_array[j][channel][0][i],
+									sep_idx_array[j][channel][1][i],
+									sep_idx_array[j][channel][2][i],
+									sep_idx_array[j][channel][3][i],
+									sep_idx_array[j][channel][4][i],
+									sep_idx_array[j][channel][5][i]
+									];
 
+							let idx = find_slice_u32(&(sep_idx_array_packed), sep_idx_pack_count, &current_slice, 5);
+							if (idx < 0)
+							{
+								for k in 0..5 {
+									sep_idx_array_packed[sep_idx_pack_count+k] = current_slice[k];
+								}
+
+								sep_idx_array_ptr[j][channel][i] = sep_idx_pack_count as u32;
+								sep_idx_pack_count += 5;
+
+								sep_out_count += 12+2;
+							}
+							else {
+								sep_idx_array_ptr[j][channel][i] = idx as u32;
+								sep_out_count += 2+2;
+							}
+						}
+					}
+				}
+			}
+
+			println!();
+			println!();
+			for i in 0..sep_idx_pack_count/5 {
+				println!(".word    {:?}, {:?}, {:?}, {:?}, {:?}", 
+					sep_idx_array_packed[i*5+0],
+					sep_idx_array_packed[i*5+1],
+					sep_idx_array_packed[i*5+2],
+					sep_idx_array_packed[i*5+3],
+					sep_idx_array_packed[i*5+4]
+					);
+			}
+			println!();
+
+			println!("// {} segments", sep_idx_pack_count/5);
+		}
+		else {
+		
+			for channel in 0..3 {
+				for j in 0..patterns as usize {
+					if packed_index[channel][j] as usize == j {
+						for i in 0..(self.ticks_per_16th as usize * 64)/quantsize as usize {
+							let current_slice = vec![sep_idx_array[j][channel][0][i],
+									sep_idx_array[j][channel][1][i],
+									sep_idx_array[j][channel][2][i],
+									sep_idx_array[j][channel][3][i],
+									sep_idx_array[j][channel][4][i],
+									sep_idx_array[j][channel][5][i]
+									];
+
+							let idx = find_slice_u32(&(sep_idx_array_packed), sep_idx_pack_count, &current_slice, 6);
+							if (idx < 0)
+							{
+								for k in 0..6 {
+									sep_idx_array_packed[sep_idx_pack_count+k] = current_slice[k];
+								}
+
+								sep_idx_array_ptr[j][channel][i] = sep_idx_pack_count as u32;
+								sep_idx_pack_count += 6;
+
+								sep_out_count += 12+2;
+							}
+							else {
+								sep_idx_array_ptr[j][channel][i] = idx as u32;
+								sep_out_count += 2;
+							}
+						}
+					}
+				}
+			}
+
+			println!();
+			println!();
+			for i in 0..sep_idx_pack_count/6 {
+				println!(".word    {:?}, {:?}, {:?}, {:?}, {:?}, {:?}", 
+					sep_idx_array_packed[i*6+0],
+					sep_idx_array_packed[i*6+1],
+					sep_idx_array_packed[i*6+2],
+					sep_idx_array_packed[i*6+3],
+					sep_idx_array_packed[i*6+4],
+					sep_idx_array_packed[i*6+5]
+					);
+			}
+			println!();
+
+			println!("// {} segments", sep_idx_pack_count/6);
+		}
+
+		for channel in 0..3 {
+			for j in 0..patterns as usize {
+				if packed_index[channel][j] as usize == j {
+					println!();
+					println!();
+					println!("ch{}_idx_{}:", channel+1, j+1);
+					println!();
+
+					let lf = (self.ticks_per_16th * 2.0) as u32/quantsize;
+
+					for i in 0..(self.ticks_per_16th as usize * 64)/quantsize as usize {
+						if (i as u32%lf) == 0 {
+							print!(".word    {:?}", sep_idx_array_ptr[j][channel][i]);
+						} 
+						else {
+							print!(", {:?}", sep_idx_array_ptr[j][channel][i]);
+						}
+						if (i as u32%lf) == lf-1 {
+							println!();
+						}
+						if (i as u32%lf*4) == lf*4-1 {
+							println!();
+						}
+					}
+				}
+			}
+		}
+		println!("// --- schema2 export size: {}", sep_out_count);
+*/
 		for channel in 0..3 {
 			writeln!(asm_file, "ch{}:", channel+1);
 			writeln!(asm_file);
