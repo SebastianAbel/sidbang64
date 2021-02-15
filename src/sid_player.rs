@@ -598,7 +598,8 @@ impl SidPlayer {
 		let mut play_index = 0;
 		//if self.state != Playing
 		{
-			self.instruments[self.inst_id as usize][self.inst_patch_id[self.inst_id as usize] as usize].reset();
+			let mut current_instrument = self.instruments[self.inst_id as usize][self.inst_patch_id[self.inst_id as usize] as usize];
+			current_instrument.reset();
 
 	    	self.resid2.write(0x05, 0x00); // ad
 		    self.resid2.write(0x06, 0x00); // sr
@@ -611,7 +612,7 @@ impl SidPlayer {
 			{
 				let bar = (play_index>>16)%64;
 
-				self.instruments[self.inst_id as usize][self.inst_patch_id[self.inst_id as usize] as usize].update(tick_counter, 0, if bar == 0 {self.instrument_notes[self.inst_id as usize]} else {-1}, &mut self.resid2, self.ticks_per_frame, false);				
+				current_instrument.update(tick_counter, 0, if bar == 0 {self.instrument_notes[self.inst_id as usize]} else {-1}, &mut self.resid2, self.ticks_per_frame, false);				
 				tick_counter += 1;
 				play_index += self.tick_add;
 			
