@@ -11,7 +11,7 @@ Instruments are configured by setting up oscillators for different parameters. T
 Songs can be exported to be played on c64. Currently the export format is essentially a dump of sid-state changes to keep the replayer fast and simple. By this the songlength is determined by the complexity of the used instruments and might overflow the memory limit quite fast.
 This will be addressed until version 1.0 by porting some of the instrument logic directly into the replayer.
 
-For further instructions refer to the [here](./doc/sidbang_ui.pdf)
+For further instructions refer to the [./doc/sidbang_ui.pdf](./doc/sidbang_ui.pdf)
 
 source:
 - https://github.com/SebastianAbel/sidbang64
