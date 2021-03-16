@@ -2,6 +2,17 @@
 
 2020/2021 - w4rp8
 
+about:
+Sidbang64 is a loop-sequencer for sid-chip multispeed sounds.
+
+Most sid-music is made with an update rate once per screen refresh of the video system (50Hz/60Hz). Multispeed means that state updates of the player happen multiple times during a screen refresh, eg. 16x translates to 800Hz on a PAL system (actually it's 16 x 50.12454212Hz, so somewhat above 800Hz).  
+Instruments are configured by setting up oscillators for different parameters. The "sample frequency" of the oscillators is determined by the set multispeed factor. The interface reflects this by displaying an oscillator frequency (f) together with the update ticks (t).
+
+Songs can be exported to be played on c64. Currently the export format is essentially a dump of sid-state changes to keep the replayer fast and simple. By this the songlength is determined by the complexity of the used instruments and might overflow the memory limit quite fast.
+This will be addressed until version 1.0 by porting some of the instrument logic directly into the replayer.
+
+For further instructions refer to the [here](./doc/sidbang_ui.pdf)
+
 source:
 - https://github.com/SebastianAbel/sidbang64
 
@@ -22,6 +33,11 @@ show options:
 
 
 ## history:
+
+0.6.3
+- fixed bug in exporter
+- small fixes in ui
+- slightly optimized c64 replayer code with dynamic filter sequence
 
 0.6.2:
 - insert/delete and copy/paste for entries in the loop-sequence
