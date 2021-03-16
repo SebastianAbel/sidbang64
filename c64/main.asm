@@ -1,26 +1,6 @@
 //----------------------------------------------------------
 .pc = $7c "ZP variables" virtual
 lineIdx:	.byte 0
-subIdx:		.byte 0
-frameCtr:	.word 0
-patternCtr:	.word 0
-dataPtr:	.word 0
-dataCh1:	.word 0
-dataCh2:	.word 0
-dataCh3:	.word 0
-dataIdx1:	.word 0
-dataIdx2:	.word 0
-dataIdx3:	.word 0
-tickCtr:	.byte 0
-trackIdx:	.byte 0
-trackIdxP:	.byte 0
-
-idx1:		.byte 0
-idx2:		.byte 0
-filterCtr:	.byte 0, 0
-tmp_a:		.byte 0
-tmp_b:		.byte 0
-tmp_c:		.byte 0
 
 //----------------------------------------------------------
 .pc=$0801 "Basic Upstart Program"
@@ -142,7 +122,7 @@ gIP_loop1:
 
 .pc = $0e00	"IRQ-handler"
 irqHandler_plain:
-			//dec $d020
+			dec $d020
 			stx xTemp+1
 			sty yTemp+1
 			sta aTemp+1
@@ -155,7 +135,6 @@ irqHandler_plain:
 
 			tya
 			and #$01
-			cmp #0
 			beq !+
 
 			nop
@@ -187,20 +166,11 @@ irqHandler_plain:
 
 			jsr music_update
 
-			inc tickCtr
-			lda tickCtr
-			cmp #70
-			bne !+
-			lda #0
-			sta tickCtr
-			inc trackIdx
-!:			
-
 yTemp:		ldy #$00
 xTemp:		ldx #$00
 aTemp:		lda #$00
 			asl $d019	// clear irq-request
-			//inc $d020
+			inc $d020
 			rti
 
 			

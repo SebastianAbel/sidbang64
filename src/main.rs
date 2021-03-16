@@ -20,6 +20,7 @@ mod sid_player;
 mod oscillator;
 mod track;
 mod instrument;
+mod exporter;
 
 use gui::{WIN_W, WIN_H};
 use conrod_glium::Renderer;

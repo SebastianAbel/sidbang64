@@ -1,3 +1,23 @@
+//----------------------------------------------------------
+.pc = $02 "ZP variables" virtual
+subIdx:		.byte 0
+frameCtr:	.word 0
+patternCtr:	.word 0
+dataPtr:	.word 0
+dataCh1:	.word 0
+dataCh2:	.word 0
+dataCh3:	.word 0
+dataIdx1:	.word 0
+dataIdx2:	.word 0
+dataIdx3:	.word 0
+
+idx1:		.byte 0
+idx2:		.byte 0
+filterCtr:	.byte 0, 0
+ffreqStore:	.byte 0, 0
+ffreqAdd:	.byte 0, 0
+
+.pc=$1000	"music player"
 music_init:
 			jmp m_init
 music_update:
@@ -136,44 +156,69 @@ update_data:
 			inc dataIdx3+1
 !:
 			
-			jmp frame_cmp		// comment out to enable the custom filter-changes
+			//jmp frame_cmp		// comment out to enable the custom filter-changes
 
 			inc	filterCtr
 			lda filterCtr	
-			cmp #48
-			bne frame_cmp
+			cmp filter_patch_length
+			beq restart_filter			
+			clc
+			lda ffreqStore
+			adc ffreqAdd
+			sta ffreqStore
+			sta	$d415
+			lda ffreqStore+1
+			adc ffreqAdd+1
+			sta ffreqStore+1
+			sta	$d416
+
+			jmp frame_cmp
+
+restart_filter:
 			lda	#$00
 			sta filterCtr
 
 			ldx	filterCtr+1
-
 			lda	filter_v,x
+			sta ffreqStore
+			lsr
+			lsr
+			lsr
+			lsr
+			lsr
 			sta	$d415
 			lda	filter_v+1,x
+			sta ffreqStore+1
 			sta $d416
 			lda	filter_v+2,x
 			sta	$d417
 			lda	filter_v+3,x
 			sta	$d418
+			lda	filter_v+4,x
+			sta ffreqAdd
+			lda	filter_v+5,x
+			sta ffreqAdd+1
 
 			txa
 			clc
-			adc #$04
-			cmp #4*9
+			adc #$06
+			cmp filter_patches
 			bne !+
 			lda #$00
 !:			
 			sta filterCtr+1
+
 
 frame_cmp:
 			clc
 			lda frameCtr
 			adc #$01
 			sta frameCtr
-			lda frameCtr+1
-			adc #$00
-			sta frameCtr+1
+			bcc !+
+			inc frameCtr+1
+!:			
 frh_cmp:	
+			lda frameCtr+1
 			cmp bng_ticks+1
 			bne !end+
 			lda frameCtr
@@ -211,33 +256,19 @@ pat_cmp:	cmp bng_ptc	// number of patterns
 
 !end:
 			ldy #0
-			clc
 			lda (dataIdx1),y
-			adc ch_ptr
 			sta dataCh1
-			iny
-			lda (dataIdx1),y
-			adc ch_ptr+1
-			sta dataCh1+1
-			dey
-			clc
 			lda (dataIdx2),y
-			adc ch_ptr+2
 			sta dataCh2
-			iny
-			lda (dataIdx2),y
-			adc ch_ptr+3
-			sta dataCh2+1
-			dey
-			clc
 			lda (dataIdx3),y
-			adc ch_ptr+4
 			sta dataCh3
 			iny
+			lda (dataIdx1),y
+			sta dataCh1+1
+			lda (dataIdx2),y
+			sta dataCh2+1
 			lda (dataIdx3),y
-			adc ch_ptr+5
 			sta dataCh3+1
-
 			rts
 
 m_init:
@@ -266,31 +297,18 @@ m_init:
 			sta dataIdx3+1			
 
 			ldy #0
-			clc
 			lda (dataIdx1),y
-			adc ch_ptr
 			sta dataCh1
-			iny
-			lda (dataIdx1),y
-			adc ch_ptr+1
-			sta dataCh1+1
-			dey
-			clc
 			lda (dataIdx2),y
-			adc ch_ptr+2
 			sta dataCh2
-			iny
-			lda (dataIdx2),y
-			adc ch_ptr+3
-			sta dataCh2+1
-			dey
-			clc
 			lda (dataIdx3),y
-			adc ch_ptr+4
 			sta dataCh3
 			iny
+			lda (dataIdx1),y
+			sta dataCh1+1
+			lda (dataIdx2),y
+			sta dataCh2+1
 			lda (dataIdx3),y
-			adc ch_ptr+5
 			sta dataCh3+1
 
 			lda #$00
@@ -301,16 +319,28 @@ m_init:
 
 			ldx #$00
 			stx	filterCtr
+
 			lda	filter_v,x
+			sta ffreqStore
+			lsr
+			lsr
+			lsr
+			lsr
+			lsr
 			sta	$d415
 			lda	filter_v+1,x
+			sta ffreqStore+1
 			sta $d416
 			lda	filter_v+2,x
 			sta	$d417
 			lda	filter_v+3,x
 			sta	$d418
+			lda	filter_v+4,x
+			sta ffreqAdd
+			lda	filter_v+5,x
+			sta ffreqAdd+1
 
-			ldx #$04
+			ldx #$06
 			stx	filterCtr+1
 			rts			
 
@@ -322,35 +352,7 @@ m_init:
 .pc =$1c00 "song data"
 credits:
 //			.text	"0123456789012345678901234567890123456789"
-			.text	"'promofiepen' / w4rp8 / 2021 / 8580     "
+			.text	"sidbang64replay v0.7 / w4rp8 / 2021     "
 
-filter_v:	.byte	0 & 7, 0>>3
-			.byte	$00, $0f
-
-			.byte	250 & 7, 250>>3
-			.byte	$81, $1f
-			
-			.byte	113 & 7, 113>>3
-			.byte	$d4, $1f
-			
-			.byte	481 & 7, 481>>3
-			.byte	$84, $5f
-			
-			.byte	1024 & 7, 1024>>3
-			.byte	$a1, $1f
-
-			.byte	327 & 7, 327>>3
-			.byte	$f3, $1f
-
-			.byte	256 & 7, 256>>3
-			.byte	$e2, $4f
-
-			.byte	1297 & 7, 1297>>3
-			.byte	$e4, $6f
-
-			.byte	203 & 7, 203>>3
-			.byte	$a1, $1f
-
-
-ch_ptr:		.word ch1, ch2, ch3
-.import source "data/promofiepen.asm"
+.import source "data/bngfilter.asm"
+.import source "data/bng.asm"

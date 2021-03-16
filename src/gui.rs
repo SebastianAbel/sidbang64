@@ -4,7 +4,6 @@
 extern crate conrod_core;
 extern crate rand;
 
-
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -21,6 +20,7 @@ use crate::{
 };
 use crate::oscillator::{Waveform, TICK_FREQ};
 use crate::instrument::{Instrument, BaseMode};
+use crate::exporter::Exporter;
 
 pub const WIN_W: u32 = (1920.0 * 0.85) as u32;
 pub const WIN_H: u32 = (1080.0 * 0.775) as u32;
@@ -406,7 +406,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         .label(&format!("EXPORT"))
         .set(ids.export, ui)
     {
-        player.export();
+        Exporter::export(player);
     }    
 
     for dialed in widget::NumberDialer::new(player.export_quantsize as f64, 0.0, 255.0, 0)
