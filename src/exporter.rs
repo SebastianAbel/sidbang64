@@ -77,8 +77,8 @@ impl Exporter {
 
 		let mut data_array = vec![vec![0 as u8; 256*256]; 3];
 		let mut data_stored = [0; 3];
-		let chunk_index = [0x2c00, 0x0000, 0x0000];	// 3 bins for splitting output data...for now only 1st bin will be needed
-		let chunk_size = [0xa400, 0x0000, 0x0000];
+		let chunk_index = [0x2c00, 0x8000, 0xe000];	// 3 bins for splitting output data...for now only 1st bin will be needed
+		let chunk_size = [0xa400, 0x5000, 0x1f00];
 
 		let mut current_array = vec![0 as u8; 256*256];
 		let mut current_length = 0;
@@ -273,7 +273,6 @@ impl Exporter {
 						let mut idx = find_slice(&(data_array[chunk]), data_stored[chunk], &current_array, last_bytes_out);
 						if (idx < 0) 
 						{
-							/*
 							if data_stored[chunk+1] > 0
 							{
 								chunk += 1;
@@ -312,12 +311,11 @@ impl Exporter {
 								}								
 							}
 							else 
-							*/
 							{
 								if data_stored[chunk] + last_bytes_out > chunk_size[chunk] {
-									// chunk += 1;
+								 	chunk += 1;
 								}
-								else 	// remove else for multiple chunks 
+								//else 	// remove else for multiple chunks 
 								{
 									for i in 0..last_bytes_out {
 										data_array[chunk][data_stored[chunk]+i] = current_array[i];
@@ -388,7 +386,7 @@ impl Exporter {
 			fs::create_dir(&path_name);
 		}
 
-		let mut asm_file = File::create(format!("{}/{}.asm", &path_name, player.session_name)).unwrap();
+		let mut asm_file = File::create(format!("{}/bng.asm", &path_name)).unwrap();
 
 		let mut totalsize = 0;
 		let patterns = if player.song_mode {player.end_pattern-player.start_pattern+1} else {1};
@@ -626,8 +624,8 @@ impl Exporter {
 
 		for chunk in 0..1 {
 			writeln!(asm_file);
-			//writeln!(asm_file, ".pc = {}",chunk_index[chunk]);
-			writeln!(asm_file, "ch{}:", chunk+1);
+			writeln!(asm_file, ".pc = {}",chunk_index[chunk]);
+			//writeln!(asm_file, "ch{}:", chunk+1);
 			writeln!(asm_file);
 	
 			for i in 0..data_stored[chunk] {

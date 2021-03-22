@@ -13,6 +13,7 @@ lineIdx:	.byte 0
 .pc = $0810 "Main Program"
 
 			sei
+/*
 			lda #ui_bgColor
 			sta $d020
 			lda #ui_scColor
@@ -35,7 +36,7 @@ lineIdx:	.byte 0
 
 			ldx #$0c
 			jsr Memory.SetFGColor
-			
+*/			
 			lda #$7f
 			sta $dc0d
 			sta $dd0d
@@ -122,7 +123,7 @@ gIP_loop1:
 
 .pc = $0e00	"IRQ-handler"
 irqHandler_plain:
-			dec $d020
+			//dec $d020
 			stx xTemp+1
 			sty yTemp+1
 			sta aTemp+1
@@ -170,7 +171,7 @@ yTemp:		ldy #$00
 xTemp:		ldx #$00
 aTemp:		lda #$00
 			asl $d019	// clear irq-request
-			inc $d020
+			//inc $d020
 			rti
 
 			
