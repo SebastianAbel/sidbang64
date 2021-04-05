@@ -54,6 +54,9 @@ pub struct DemoApp {
     pub copy_pattern: [i16; 3],
     pub copy_patch_pattern: [i16; 3],
 
+    pub copy4_pattern: [[i16; 3]; 4],
+    pub copy4_patch_pattern: [[i16; 3]; 4],
+
     pub input_keycode: Option<glium::glutin::VirtualKeyCode>,
     pub input_delay: u8,
 }
@@ -82,6 +85,9 @@ impl DemoApp {
 
             copy_pattern: [0; 3],
             copy_patch_pattern: [0; 3],
+
+            copy4_pattern: [[0; 3]; 4],
+            copy4_patch_pattern: [[0; 3]; 4],
 
             input_keycode: None,
             input_delay: 0,
@@ -252,6 +258,9 @@ widget_ids! {
 
         copy_loop,
         paste_loop,
+
+        copy4_loop,
+        paste4_loop,
 
         copy_pattern,
         paste_pattern,
@@ -1149,7 +1158,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         .parent(ids.canvas)
         .set(ids.seq_title, ui);
 
-    for dialed in widget::NumberDialer::new(player.ticks_per_frame as f64, 1.0, 24.0, 0)
+    for dialed in widget::NumberDialer::new(player.ticks_per_frame as f64, 1.0, 32.0, 0)
         .right_from(ids.seq_title, 0.0)
         .parent(ids.canvas)
         .w_h(WIDGET_SIZE*2.0, WIDGET_SIZE)
@@ -1268,6 +1277,39 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
                 player.track.patch_patterns[player.pattern_idx as usize][i] = app.copy_patch_pattern[i];
             }
         }
+
+
+        for _press in widget::Button::new()
+            .right(WIDGET_DISTANCE*2.0)
+            .color(conrod_core::color::BLUE)
+            .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+            .label(&format!("COPY4"))
+            .set(ids.copy4_loop, ui)
+        {
+            for i in 0..3 {
+                for j in 0..4 {
+                    app.copy4_pattern[j][i] = player.track.patterns[((player.pattern_idx & 0xfffc) + j as u32) as usize][i];
+                    app.copy4_patch_pattern[j][i] = player.track.patch_patterns[((player.pattern_idx & 0xfffc) + j as u32) as usize][i];
+                }
+            }
+        }
+
+
+        for _press in widget::Button::new()
+            .right(WIDGET_DISTANCE*1.0)
+            .color(conrod_core::color::RED)
+            .w_h(WIDGET_SIZE*2.5, WIDGET_SIZE)
+            .label(&format!("PASTE4"))
+            .set(ids.paste4_loop, ui)
+        {
+            for i in 0..3 {
+                for j in 0..4 {
+                    player.track.patterns[((player.pattern_idx & 0xfffc) + j as u32) as usize][i] = app.copy4_pattern[j][i];
+                    player.track.patch_patterns[((player.pattern_idx & 0xfffc) + j as u32) as usize][i] = app.copy4_patch_pattern[j][i];
+                }
+            }            
+        }
+
     }
     else {
         for dialed in widget::NumberDialer::new(player.start_pattern as f64, 0.0, 63.0, 0)

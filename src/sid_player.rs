@@ -507,7 +507,6 @@ impl SidPlayer {
 
 	}
 
-
 	pub fn note_off(&mut self) {
 	    self.resid.write(0x04, 0x00); // cr
 	}
