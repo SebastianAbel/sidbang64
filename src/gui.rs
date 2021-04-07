@@ -297,8 +297,10 @@ widget_ids! {
         filter_res,
         filter_voice[],
         filter_type[],
-
         filter_label[],
+
+        filter_patch_idx[],
+
 
         seq_title,
 
@@ -1087,16 +1089,16 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     let mut i = 0;
     for &id in ids.filter_voice.iter() {        
         for selected in widget::Toggle::new(
-            player.filter_mask & (1<<(i)) != 0)
+            player.filter_matrix[player.filter_patch_idx as usize].filter_mask & (1<<(i)) != 0)
             .right_from(ids.osc3_wav, WIN_W as f64 * 0.5 + (WIDGET_SIZE*3.0) + (WIDGET_SIZE+2.0) * i as f64)
             .w_h(WIDGET_SIZE, WIDGET_SIZE)
             .set(id, ui)
         {
             if selected {
-                player.filter_mask |= 1<<(i);
+                player.filter_matrix[player.filter_patch_idx as usize].filter_mask |= 1<<(i);
             }
             else {
-                player.filter_mask &= 0x7 ^ (1<<(i));
+                player.filter_matrix[player.filter_patch_idx as usize].filter_mask &= 0x7 ^ (1<<(i));
             }
             //app.preview_update = 10;
         }   
@@ -1107,44 +1109,74 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     let mut i = 0;
     for &id in ids.filter_type.iter() {        
         for selected in widget::Toggle::new(
-            player.filter_type & (1<<(2-i)) != 0)
+            player.filter_matrix[player.filter_patch_idx as usize].filter_type & (1<<(2-i)) != 0)
             .right_from(ids.osc1_wav, WIN_W as f64 * 0.5 + (WIDGET_SIZE*3.0) + (WIDGET_SIZE+2.0) * i as f64)
             .w_h(WIDGET_SIZE, WIDGET_SIZE)
             .set(id, ui)
         {
             if selected {
-                player.filter_type |= 1<<(2-i);
+                player.filter_matrix[player.filter_patch_idx as usize].filter_type |= 1<<(2-i);
             }
             else {
-                player.filter_type &= 0x7 ^ (1<<(2-i));
+                player.filter_matrix[player.filter_patch_idx as usize].filter_type &= 0x7 ^ (1<<(2-i));
             }
             //app.preview_update = 10;
         }   
         i += 1;
     }
 
-    for dialed in widget::Slider::new(player.filter_freq as f64, 0.0, 0x7ff as f64)
+    for dialed in widget::Slider::new(player.filter_matrix[player.filter_patch_idx as usize].filter_freq as f64, 0.0, 0x7ff as f64)
         //.right_from(ids.osc3_wav, WIN_W as f64 * 0.5)
         .down_from(ids.filter_type[0], WIDGET_SIZE*0.5)
         .w_h(WIDGET_SIZE*10.0, WIDGET_SIZE)
-        .label(&format!("f: {}", player.filter_freq))
+        .label(&format!("f: {}", player.filter_matrix[player.filter_patch_idx as usize].filter_freq))
         .set(ids.filter_freq, ui)
     {
 
-        player.filter_freq = dialed as u32;
+        player.filter_matrix[player.filter_patch_idx as usize].filter_freq = dialed as u32;
         //app.preview_update = 10;
     }   
 
-    for dialed in widget::Slider::new(player.filter_res as f64, 0.0, 0xf as f64)
+    for dialed in widget::Slider::new(player.filter_matrix[player.filter_patch_idx as usize].filter_res as f64, 0.0, 0xf as f64)
         .down_from(ids.filter_freq, WIDGET_SIZE*0.5)
         .w_h(WIDGET_SIZE*5.0, WIDGET_SIZE)
-        .label(&format!("r: {}", player.filter_res))
+        .label(&format!("r: {}", player.filter_matrix[player.filter_patch_idx as usize].filter_res))
         .set(ids.filter_res, ui)
     {
 
-        player.filter_res = dialed as u8;
+        player.filter_matrix[player.filter_patch_idx as usize].filter_res = dialed as u8;
         //app.preview_update = 10;
     }   
+
+
+
+
+
+    ids.filter_patch_idx.resize(64, &mut ui.widget_id_generator());
+    for i in 0..16 {          
+        for _press in widget::Button::new()
+            .right_from(ids.filter_voice[0], (WIDGET_SIZE*13.0) + 6.0 + WIDGET_SIZE * i as f64 + (2*i + 4*(i/4) + 6*(i/16)) as f64)
+            .color(if i == player.filter_patch_idx {conrod_core::color::LIGHT_BLUE} else {conrod_core::color::DARK_GREY})
+            .w_h(WIDGET_SIZE*1.0, WIDGET_SIZE*1.0)
+            .set(ids.filter_patch_idx[i as usize], ui)
+        {
+            player.filter_patch_idx = i;
+        }   
+    }
+    for j in 1..4 {
+        for i in 0..16 { 
+            let idx = j*16 + i;         
+            for _press in widget::Button::new()
+                .down_from(ids.filter_patch_idx[idx-16], WIDGET_SIZE*0.5)
+                .color(if idx as u16 == player.filter_patch_idx {conrod_core::color::LIGHT_BLUE} else {conrod_core::color::DARK_GREY})
+                .w_h(WIDGET_SIZE*1.0, WIDGET_SIZE*1.0)
+                .set(ids.filter_patch_idx[idx as usize], ui)
+            {
+                player.filter_patch_idx = idx as u16;
+            }   
+        }
+    }    
+
 
 
 

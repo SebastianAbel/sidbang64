@@ -24,6 +24,7 @@ use crate::exporter::Exporter;
 
 use crate::track::Track;
 use crate::instrument::Instrument;
+use crate::filter::FilterPatch;
 
 const BUFFERSIZE : usize = 1024;
 
@@ -183,15 +184,18 @@ pub struct SidPlayer {
     pub play_index: u32,      // 16 bit fixed point
     tick_counter: u32,
 
-
+/*
     pub filter_freq: u32,
     pub filter_res: u8,
     pub filter_mask: u8,
     pub filter_type: u8,
-
+*/
 	pub instruments: Vec<[Instrument; 16]>,
 	pub instrument_notes: [i8; 16],
 	pub track: Track,
+
+	pub filter_matrix: [FilterPatch; 64],
+	pub filter_patch_idx: u16,
 
 	pub start_pattern: u32,
 	pub end_pattern: u32,
@@ -246,6 +250,8 @@ impl SidPlayer {
 
    		let preview_length = 44100*2;
 
+   		let filter_patches = [FilterPatch::new(); 64];
+
 	    let mut player = SidPlayer {
 	    	resid: Sid::new(if sidmodel == 0 {resid::ChipModel::Mos6581} else {resid::ChipModel::Mos8580}),
 	    	resid2: Sid::new(if sidmodel == 0 {resid::ChipModel::Mos6581} else {resid::ChipModel::Mos8580}),
@@ -276,13 +282,10 @@ impl SidPlayer {
             play_index: 0,
 	    	tick_counter: 0,
 	    	
-	    	filter_freq: 0x7ff,
-	    	filter_res: 0x00,
-	    	filter_mask: 0x00,
-	    	filter_type: 0x01,
-
 	    	instruments: vec![[Instrument::new("".to_string());16];16],
 	    	instrument_notes: [0; 16],
+	    	filter_matrix: filter_patches,
+	    	filter_patch_idx: 0,
 
 	    	track: Track {
 				//channels: vec![[0;16];3],
@@ -322,11 +325,11 @@ impl SidPlayer {
 
 		
 
-		player.resid.write(0x15, (player.filter_freq & 0x07) as u8);
-		player.resid.write(0x16, ((player.filter_freq>>3) & 0xff) as u8);
+		player.resid.write(0x15, (player.filter_matrix[player.filter_patch_idx as usize].filter_freq & 0x07) as u8);
+		player.resid.write(0x16, ((player.filter_matrix[player.filter_patch_idx as usize].filter_freq>>3) & 0xff) as u8);
 
-		player.resid.write(0x17, ((player.filter_res & 0x0f)<<4) | player.filter_mask);
-		player.resid.write(0x18, ((player.filter_type & 0x0f)<<4) | 0x0f);
+		player.resid.write(0x17, ((player.filter_matrix[player.filter_patch_idx as usize].filter_res & 0x0f)<<4) | player.filter_matrix[player.filter_patch_idx as usize].filter_mask);
+		player.resid.write(0x18, ((player.filter_matrix[player.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
 
 	    player.resid.write(0x05, 0x00); // ad
 	    player.resid.write(0x06, 0xf0); // sr
@@ -356,10 +359,10 @@ impl SidPlayer {
 		self.resid.reset();
 		
 
-		self.resid.write(0x15, (self.filter_freq & 0x07) as u8);
-		self.resid.write(0x16, ((self.filter_freq>>3) & 0xff) as u8);
-		self.resid.write(0x17, ((self.filter_res & 0x0f)<<4) | self.filter_mask);
-		self.resid.write(0x18, ((self.filter_type & 0x0f)<<4) | 0x0f);
+		self.resid.write(0x15, (self.filter_matrix[self.filter_patch_idx as usize].filter_freq & 0x07) as u8);
+		self.resid.write(0x16, ((self.filter_matrix[self.filter_patch_idx as usize].filter_freq>>3) & 0xff) as u8);
+		self.resid.write(0x17, ((self.filter_matrix[self.filter_patch_idx as usize].filter_res & 0x0f)<<4) | self.filter_matrix[self.filter_patch_idx as usize].filter_mask);
+		self.resid.write(0x18, ((self.filter_matrix[self.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
 
 
 	    self.resid.write(0x05, 0x00); // ad
@@ -575,12 +578,12 @@ impl SidPlayer {
 				}
 			}
 
-			self.resid.write(0x15, (self.filter_freq & 0x07) as u8);
-			self.resid.write(0x16, ((self.filter_freq>>3) & 0xff) as u8);
+			self.resid.write(0x15, (self.filter_matrix[self.filter_patch_idx as usize].filter_freq & 0x07) as u8);
+			self.resid.write(0x16, ((self.filter_matrix[self.filter_patch_idx as usize].filter_freq>>3) & 0xff) as u8);
 
-			self.resid.write(0x17, ((self.filter_res & 0x0f)<<4) | self.filter_mask);
+			self.resid.write(0x17, ((self.filter_matrix[self.filter_patch_idx as usize].filter_res & 0x0f)<<4) | self.filter_matrix[self.filter_patch_idx as usize].filter_mask);
 			if self.state != Paused {
-				self.resid.write(0x18, ((self.filter_type & 0x0f)<<4) | 0x0f);
+				self.resid.write(0x18, ((self.filter_matrix[self.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
 			}
 			let (samples, _next_delta) = self.resid.sample((985248.0/(self.ticks_per_frame as f64 * TICK_FREQ)) as u32, &mut self.buffer[..], 1);
 		    for i in 0..samples {
@@ -661,7 +664,7 @@ impl SidPlayer {
 			self.resid.write(0x18, 0x00);
 		}
 		else {
-			self.resid.write(0x18, ((self.filter_type & 0x0f)<<4) | 0x0f);
+			self.resid.write(0x18, ((self.filter_matrix[self.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
 		}
 	}
 

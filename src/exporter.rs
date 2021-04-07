@@ -77,8 +77,8 @@ impl Exporter {
 
 		let mut data_array = vec![vec![0 as u8; 256*256]; 3];
 		let mut data_stored = [0; 3];
-		let chunk_index = [0x4000, 0x8000, 0xe000];	// 3 bins for splitting output data...for now only 1st bin will be needed
-		let chunk_size = [0x9000, 0x5000, 0x1f00];
+		let chunk_index = [0x4400, 0x8000, 0xe000];	// 3 bins for splitting output data...for now only 1st bin will be needed
+		let chunk_size = [0x8c00, 0x5000, 0x1f00];
 
 		let mut current_array = vec![0 as u8; 256*256];
 		let mut current_length = 0;
