@@ -6,6 +6,8 @@ pub struct FilterPatch {
     pub filter_res: u8,
     pub filter_mask: u8,
     pub filter_type: u8,
+
+    pub filter_freq_add: u32,
 }
 
 impl FilterPatch {
@@ -16,6 +18,8 @@ impl FilterPatch {
 			filter_res: 0x00,
 			filter_mask: 0x00,
 			filter_type: 0x01,
+
+			filter_freq_add: 0x00,
 	  	}
 	}
 }

@@ -296,6 +296,7 @@ widget_ids! {
         pw_osc1_add1,
 
         filter_freq,
+        filter_add,
         filter_res,
         filter_voice[],
         filter_type[],
@@ -442,7 +443,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }  
 
 
-    widget::Text::new("sidbang64 v0.6.4 / w4rp8 / 2021")
+    widget::Text::new("sidbang64 v0.6.5a / w4rp8 / 2021")
         .font_size(TEXT_SIZE_TINY)
         .color(conrod_core::color::BLUE)
         .right(WIDGET_DISTANCE*39.0)
@@ -1139,6 +1140,16 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         player.filter_matrix[player.filter_patch_idx as usize].filter_freq = (dialed * 0x7ff as f64) as u32;
         //app.preview_update = 10;
     }   
+
+    for dialed in widget::NumberDialer::new(player.filter_matrix[player.filter_patch_idx as usize].filter_freq_add as f64, 0.0, 0xffff as f64, 0)
+        .right(WIDGET_DISTANCE)
+        .w_h(WIDGET_SIZE*4.0, WIDGET_SIZE)
+        //.label(&format!("S"))
+        .set(ids.filter_add, ui)
+    {
+        player.filter_matrix[player.filter_patch_idx as usize].filter_freq_add = dialed as u32;
+        //app.preview_update = 10;
+    }
 
     for dialed in widget::Slider::new(player.filter_matrix[player.filter_patch_idx as usize].filter_res as f64, 0.0, 0xf as f64)
         .down_from(ids.filter_freq, WIDGET_SIZE*0.5)

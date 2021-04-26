@@ -166,6 +166,11 @@ update_data:
 			lda ffreqStore
 			adc ffreqAdd
 			sta ffreqStore
+			//lsr
+			//lsr
+			//lsr
+			//lsr
+			//lsr
 			sta	$d415
 			lda ffreqStore+1
 			adc ffreqAdd+1

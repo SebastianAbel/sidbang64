@@ -182,6 +182,7 @@ pub struct SidPlayer {
 
     pub state: PlayerState,
     pub play_index: u32,      // 16 bit fixed point
+    pub last_index: u32,	
     tick_counter: u32,
 
 /*
@@ -196,6 +197,9 @@ pub struct SidPlayer {
 
 	pub filter_matrix: [FilterPatch; 64],
 	pub filter_patch_idx: u16,
+
+	pub filter_freq_current: u32,
+	pub filter_freq_add: u32,
 
 	pub start_pattern: u32,
 	pub end_pattern: u32,
@@ -280,8 +284,9 @@ impl SidPlayer {
 
             state: Paused,
             play_index: 0,
+	    	last_index:63<<16,
 	    	tick_counter: 0,
-	    	
+
 	    	instruments: vec![[Instrument::new("".to_string());16];16],
 	    	instrument_notes: [0; 16],
 	    	filter_matrix: filter_patches,
@@ -294,6 +299,9 @@ impl SidPlayer {
 				sequences: vec![ vec![ vec![-1; 64]; 32] ; 16],
 				patches: vec![ vec![ vec![-1; 64]; 32] ; 16],
 			},
+
+			filter_freq_current: 0,
+			filter_freq_add: 0,
 
 			start_pattern: 0,
 			end_pattern: 0,
@@ -550,8 +558,17 @@ impl SidPlayer {
 						self.instruments[inst][self.current_channel_patch[channel] as usize].update(self.tick_counter, channel as u8, note, &mut self.resid, self.ticks_per_frame, false);
 					}
 				}
-
+			    if ((self.play_index>>16)%64) != ((self.last_index>>16)%64) {
+			    	if ((self.play_index>>16)%64) < ((self.last_index>>16)%64) { 
+			    		self.filter_freq_current = (self.filter_matrix[self.filter_patch_idx as usize].filter_freq << 5) as u32;
+						self.filter_freq_add = self.filter_matrix[self.filter_patch_idx as usize].filter_freq_add;
+					}
+					else {
+						self.filter_freq_current += self.filter_freq_add;
+					}
+			    }
 				self.tick_counter += 1;
+				self.last_index = self.play_index;
 			    self.play_index += self.tick_add * self.tick_scale as u32;
 			    if ((self.play_index>>16)%64) < play_index {
 				    if self.song_mode {
@@ -578,8 +595,10 @@ impl SidPlayer {
 				}
 			}
 
-			self.resid.write(0x15, (self.filter_matrix[self.filter_patch_idx as usize].filter_freq & 0x07) as u8);
-			self.resid.write(0x16, ((self.filter_matrix[self.filter_patch_idx as usize].filter_freq>>3) & 0xff) as u8);
+			let filter_val = self.filter_freq_current>>5;
+
+			self.resid.write(0x15, (filter_val & 0x07) as u8);
+			self.resid.write(0x16, ((filter_val>>3) & 0xff) as u8);
 
 			self.resid.write(0x17, ((self.filter_matrix[self.filter_patch_idx as usize].filter_res & 0x0f)<<4) | self.filter_matrix[self.filter_patch_idx as usize].filter_mask);
 			if self.state != Paused {
