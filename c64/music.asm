@@ -234,8 +234,10 @@ frl_cmp:
 			lda patternCtr
 pat_cmp:	cmp bng_ptc	// number of patterns
 			bne !+
-			lda #$00
-			sta patternCtr
+			dec patternCtr
+			//lda #$00
+			//sta patternCtr
+			lda patternCtr
 !:			asl
 			tay
 		
@@ -349,10 +351,11 @@ m_init:
 .import source "voc2_kernels.asm"
 .import source "voc3_kernels.asm"	
 
-.pc =$1c00 "song data"
+.pc =$1b80 "song data"
 credits:
 //			.text	"0123456789012345678901234567890123456789"
-			.text	"sidbang64replay v0.7 / w4rp8 / 2021     "
+			//.text	"sidbang64replay v0.7 / w4rp8 / 2021     "
+			.text	"jam'n'flute (8580)      w4rp8/pht - 2021"
 
 .import source "data/bngfilter.asm"
 .import source "data/bng.asm"

@@ -13,7 +13,7 @@ lineIdx:	.byte 0
 .pc = $0810 "Main Program"
 
 			sei
-/*
+
 			lda #ui_bgColor
 			sta $d020
 			lda #ui_scColor
@@ -36,7 +36,7 @@ lineIdx:	.byte 0
 
 			ldx #$0c
 			jsr Memory.SetFGColor
-*/			
+			
 			lda #$7f
 			sta $dc0d
 			sta $dd0d
@@ -54,27 +54,29 @@ lineIdx:	.byte 0
 			sta $fffe  //the address of our interrupt code
 			lda #>irqHandler_plain
 			sta $ffff
-			asl $d019
 
 			jsr generateIrqPositions
-			lda irqPositionH+39
+			lda irqPositionH+1
 			sta $d011
-			lda irqPositionL+39
+			lda irqPositionL+1
 			sta $d012
+
+/*
+			lda #<irqHandler_single 
+			sta $fffe
+			lda #>irqHandler_single
+			sta $ffff
+			asl $d019
+
+			lda #$1b
+			sta $d011
+			lda #52
+			sta $d012
+*/
 
 			lda #$00
 			sta lineIdx
-
 			jsr music_init
-
-!:			
-			lda $d011
-			and #$80
-			beq !-
-!:
-			lda $d011
-			and #$80
-			bne !-
 			cli	
 
 mainloop_1:			
@@ -84,24 +86,28 @@ mainloop_1:
 generateIrqPositions:
 			lda #$00
 			sta $80
-			lda #$00	// start-offset-l
+			lda #04	// start-offset-l
 			sta $81
-			sta irqPositionL+15
+			//sta irqPositionL+1
+			sta irqPositionL+15		// 16x
 			//sta irqPositionL+23		// 24x
 			lda #$00	
 			sta $82
-			ora #$5b
-			sta irqPositionH+15
+			ora #$1b
+			//sta irqPositionH+1
+			sta irqPositionH+15		// 16x
 			//sta irqPositionH+23		// 24x
 			ldy #$00
 gIP_loop1:			 
 			clc
 			lda $80
-			adc #$80
+			//adc #$00
+			adc #$80	// 16x
 			//adc #$00	// 24x
 			sta $80
 			lda $81
-			adc #$13
+			//adc #$9c
+			adc #$13	// 16x
 			//adc #$0d	// 24x
 			sta $81
 			sta irqPositionL,y
@@ -111,9 +117,10 @@ gIP_loop1:
 			clc
 			ror
 			ror
-			ora #$5b
+			ora #$1b
 			sta irqPositionH,y
 			iny
+			//cpy #1
 			cpy #15
 			//cpy #23	// 24x
 			bne gIP_loop1
@@ -123,7 +130,7 @@ gIP_loop1:
 
 .pc = $0e00	"IRQ-handler"
 irqHandler_plain:
-			//dec $d020
+			dec $d020
 			stx xTemp+1
 			sty yTemp+1
 			sta aTemp+1
@@ -158,7 +165,9 @@ irqHandler_plain:
 			nop
 			nop
 !:
+
 			iny
+			//cpy #2
 			cpy #16
 			bne !+
 			
@@ -171,9 +180,23 @@ yTemp:		ldy #$00
 xTemp:		ldx #$00
 aTemp:		lda #$00
 			asl $d019	// clear irq-request
-			//inc $d020
+			inc $d020
 			rti
 
+irqHandler_single:
+			dec $d020
+			stx xTemp2+1
+			sty yTemp2+1
+			sta aTemp2+1
+
+			jsr music_update
+
+yTemp2:		ldy #$00
+xTemp2:		ldx #$00
+aTemp2:		lda #$00
+			asl $d019	// clear irq-request
+			inc $d020
+			rti
 			
 
 .pc=$0f00	"IRQ position table" virtual
