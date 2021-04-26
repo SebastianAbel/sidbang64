@@ -77,8 +77,10 @@ impl Exporter {
 
 		let mut data_array = vec![vec![0 as u8; 256*256]; 3];
 		let mut data_stored = [0; 3];
-		let chunk_index = [0x4400, 0x8000, 0xe000];	// 3 bins for splitting output data...for now only 1st bin will be needed
-		let chunk_size = [0x8c00, 0x5000, 0x1f00];
+
+		let chunk_index = [0x3800, 0xe000, 0xe000];	// 3 bins for splitting output data...for now only 1st bin will be needed
+		let chunk_size = [0x9800, 0x1f00, 0x1f00];
+		let use_export_bins = 2;
 
 		let mut current_array = vec![0 as u8; 256*256];
 		let mut current_length = 0;
@@ -285,11 +287,16 @@ impl Exporter {
 										idx = find_slice(&(data_array[chunk]), data_stored[chunk], &current_array, last_bytes_out);
 										if (idx < 0) 
 										{
-											for i in 0..last_bytes_out {
-												data_array[chunk][data_stored[chunk]+i] = current_array[i];
+											if data_stored[chunk] + last_bytes_out > chunk_size[chunk] {
+												println!("chunk3 size reached");
 											}
-											idx_array[pattern_ctr][channel][(tick_counter/quantsize) as usize] = data_stored[chunk] as u32 + chunk_index[chunk];
-											data_stored[chunk] += last_bytes_out;
+											else {
+												for i in 0..last_bytes_out {
+													data_array[chunk][data_stored[chunk]+i] = current_array[i];
+												}
+												idx_array[pattern_ctr][channel][(tick_counter/quantsize) as usize] = data_stored[chunk] as u32 + chunk_index[chunk];
+												data_stored[chunk] += last_bytes_out;
+											}
 										}
 										else {
 											idx_array[pattern_ctr][channel][(tick_counter/quantsize) as usize] = idx as u32 + chunk_index[chunk];
@@ -297,6 +304,7 @@ impl Exporter {
 									}
 									else {
 										if data_stored[chunk] + last_bytes_out > chunk_size[chunk] {
+											println!("chunk2 size reached");
 											chunk += 1;
 										}
 										for i in 0..last_bytes_out {
@@ -313,6 +321,7 @@ impl Exporter {
 							else 
 							{
 								if data_stored[chunk] + last_bytes_out > chunk_size[chunk] {
+									println!("chunk1 size reached");
 								 	chunk += 1;
 								}
 								//else 	// remove else for multiple chunks 
@@ -622,7 +631,7 @@ impl Exporter {
 			totalsize += patterns_written as usize * 2*(player.ticks_per_16th as usize *64)/quantsize as usize;
 		}
 
-		for chunk in 0..1 {
+		for chunk in 0..use_export_bins {
 			writeln!(asm_file);
 			writeln!(asm_file, ".pc = {}",chunk_index[chunk]);
 			//writeln!(asm_file, "ch{}:", chunk+1);

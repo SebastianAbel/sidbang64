@@ -175,7 +175,7 @@ pub struct SidPlayer {
 	pub ticks_per_16th: f64,
 
 	pub ticks_per_frame: u8,
-	ticks_per_second: f64,
+	pub ticks_per_second: f64,
     tick_add: u32,
     pub tick_add_f64: f64,
     pub tick_scale: u8,

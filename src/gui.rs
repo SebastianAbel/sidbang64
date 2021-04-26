@@ -243,6 +243,8 @@ widget_ids! {
         pulsewidth_a,
         pulsewidth_b,
 
+        seq_time,
+
         player_speed,
         bpm,
         ticks,
@@ -440,7 +442,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
     }  
 
 
-    widget::Text::new("sidbang64 v0.6.3 / w4rp8 / 2021")
+    widget::Text::new("sidbang64 v0.6.4 / w4rp8 / 2021")
         .font_size(TEXT_SIZE_TINY)
         .color(conrod_core::color::BLUE)
         .right(WIDGET_DISTANCE*39.0)
@@ -1125,15 +1127,16 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         i += 1;
     }
 
-    for dialed in widget::Slider::new(player.filter_matrix[player.filter_patch_idx as usize].filter_freq as f64, 0.0, 0x7ff as f64)
+    let mut val = player.filter_matrix[player.filter_patch_idx as usize].filter_freq as f64 / 0x7ff as f64;
+    for dialed in widget::Slider::new(val, 0.0, 1.0)
         //.right_from(ids.osc3_wav, WIN_W as f64 * 0.5)
         .down_from(ids.filter_type[0], WIDGET_SIZE*0.5)
-        .w_h(WIDGET_SIZE*10.0, WIDGET_SIZE)
+        .w_h(WIDGET_SIZE*5.0, WIDGET_SIZE)
         .label(&format!("f: {}", player.filter_matrix[player.filter_patch_idx as usize].filter_freq))
         .set(ids.filter_freq, ui)
     {
 
-        player.filter_matrix[player.filter_patch_idx as usize].filter_freq = dialed as u32;
+        player.filter_matrix[player.filter_patch_idx as usize].filter_freq = (dialed * 0x7ff as f64) as u32;
         //app.preview_update = 10;
     }   
 
@@ -1182,7 +1185,11 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
 
 
 
-
+    let mut time = player.ticks_per_16th*64.0 / player.ticks_per_second;
+    if player.song_mode {
+        time *= (1 + player.end_pattern - player.start_pattern) as f64;
+    }
+    time /= player.tick_scale as f64;
     widget::Text::new("")
         .font_size(SUBTITLE_SIZE)
         .top_left_with_margin_on(ids.canvas, 0.0)
@@ -1190,7 +1197,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         .parent(ids.canvas)
         .set(ids.seq_title, ui);
 
-    for dialed in widget::NumberDialer::new(player.ticks_per_frame as f64, 1.0, 32.0, 0)
+    for dialed in widget::NumberDialer::new(player.ticks_per_frame as f64, 4.0, 32.0, 0)
         .right_from(ids.seq_title, 0.0)
         .parent(ids.canvas)
         .w_h(WIDGET_SIZE*2.0, WIDGET_SIZE)
@@ -1234,6 +1241,13 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         app.preview_update = 10;
     }
 
+
+    widget::Text::new(&format!("{}:{}.{}",time as u32/60, time as u32%60, (time-(time as u32)as f64) as u32))
+        .right(WIDGET_DISTANCE)
+        .font_size(TEXT_SIZE_SMALL)
+        .w_h(WIDGET_SIZE*5.0, WIDGET_SIZE)
+        .parent(ids.canvas)
+        .set(ids.seq_time, ui);
 
 
     for _press in widget::Button::new()
