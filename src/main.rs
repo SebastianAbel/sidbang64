@@ -41,6 +41,7 @@ fn main() {
     let mut filter = true;
     let mut session_name = "default".to_string();
     let mut autoload = false;
+    let mut autoplay = true;
     {  // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
         ap.set_description("2020/2021 w4rp8");
@@ -74,6 +75,9 @@ fn main() {
         ap.refer(&mut autoload)
             .add_option(&["--autoload"], StoreTrue,
             "autoload session on startup");
+        ap.refer(&mut autoplay)
+            .add_option(&["--autoplay"], StoreTrue,
+            "autoplay on startup");
         ap.parse_args_or_exit();
     }
 
@@ -123,6 +127,10 @@ fn main() {
     // handle autoload
     if autoload {
         gui::load_session( &mut app, &mut player );
+    }
+
+    if autoplay {
+        player.play();  // Note: could use key_space, but this is more explicit
     }
 
     // Start the loop:

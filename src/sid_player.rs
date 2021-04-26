@@ -658,6 +658,13 @@ impl SidPlayer {
 		}
 	}
 
+	pub fn play( &mut self ){
+		if self.state == Paused {	// protect against double play
+			self.state = Playing;
+			self.resid.write(0x18, ((self.filter_matrix[self.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
+		}
+	}
+	
 	pub fn key_space(&mut self) {
 		self.state = if self.state == Paused {Playing} else {Paused}; 
 		if self.state == Paused {
