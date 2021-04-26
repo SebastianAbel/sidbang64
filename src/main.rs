@@ -39,6 +39,7 @@ fn main() {
     let mut multisampling_param = 4;
     let mut resampling = 0;
     let mut filter = true;
+    let mut session_name = "default".to_string();
     {  // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
         ap.set_description("2020/2021 w4rp8");
@@ -66,6 +67,9 @@ fn main() {
         ap.refer(&mut multisampling_param)
             .add_option(&["-m", "--multisampling"], Store,
             "set multisampling (default: 4)");                        
+        ap.refer(&mut session_name)
+            .add_option(&["-S", "--session"], Store,
+            "set session name (default: default)");
         ap.parse_args_or_exit();
     }
 
@@ -94,6 +98,7 @@ fn main() {
 
     let image_map : conrod_core::image::Map<glium::texture::Texture2d> = conrod_core::image::Map::new();
     let mut app = gui::DemoApp::new();
+    app.set_session_name( &session_name );
     
 
     // A type used for converting `conrod_core::render::Primitives` into `Command`s that can be used

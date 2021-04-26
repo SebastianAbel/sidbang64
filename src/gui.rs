@@ -97,6 +97,10 @@ impl DemoApp {
     pub fn set_note(&mut self, note: u8) {
 
     }
+
+    pub fn set_session_name( &mut self, session_name: &str ) {
+        self.session_name = session_name.to_owned();
+    }
 /*
     pub fn save_session(&mut self, session_name: &String) -> std::io::Result<()> {
         let path_name = format!("./bng/{}", session_name);
