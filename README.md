@@ -31,8 +31,17 @@ run:
 show options:
 - `./target/release/sidbang64 --help`
 
+examples:
+- some projects are stored in the `/bng` subfolder
+- type in one of the names from there, load and press space to play
+- switch from loop- to songmode if needed
+
 
 ## history:
+
+0.6.4
+- 64 filterpatches to store settings
+- disabled 1x-3x speeds for now as these seem not to play as intended
 
 0.6.3
 - fixed bug in exporter
