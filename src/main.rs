@@ -40,6 +40,7 @@ fn main() {
     let mut resampling = 0;
     let mut filter = true;
     let mut session_name = "default".to_string();
+    let mut autoload = false;
     {  // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
         ap.set_description("2020/2021 w4rp8");
@@ -70,6 +71,9 @@ fn main() {
         ap.refer(&mut session_name)
             .add_option(&["-S", "--session"], Store,
             "set session name (default: default)");
+        ap.refer(&mut autoload)
+            .add_option(&["--autoload"], StoreTrue,
+            "autoload session on startup");
         ap.parse_args_or_exit();
     }
 
@@ -115,6 +119,11 @@ fn main() {
     let mut player = SidPlayer::new(sidmodel, resampling, filter, f64::max(0.2, buffersize as f64/1000.0));
     
     player.playback();
+
+    // handle autoload
+    if autoload {
+        gui::load_session( &mut app, &mut player );
+    }
 
     // Start the loop:
     //
