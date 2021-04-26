@@ -42,6 +42,7 @@ fn main() {
     let mut session_name = "default".to_string();
     let mut autoload = false;
     let mut autoplay = true;
+    let mut songmode = false;
     {  // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
         ap.set_description("2020/2021 w4rp8");
@@ -78,6 +79,9 @@ fn main() {
         ap.refer(&mut autoplay)
             .add_option(&["--autoplay"], StoreTrue,
             "autoplay on startup");
+        ap.refer(&mut songmode)
+            .add_option(&["--songmode"], StoreTrue,
+            "song mode on startup");
         ap.parse_args_or_exit();
     }
 
@@ -129,6 +133,10 @@ fn main() {
         gui::load_session( &mut app, &mut player );
     }
 
+    if songmode {
+        player.toggle_song_mode();
+    }
+    
     if autoplay {
         player.play();  // Note: could use key_space, but this is more explicit
     }

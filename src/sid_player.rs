@@ -510,6 +510,10 @@ impl SidPlayer {
 
 	}
 
+	pub fn toggle_song_mode( &mut self ) {
+		self.song_mode = !self.song_mode;
+	}
+	
 	pub fn note_off(&mut self) {
 	    self.resid.write(0x04, 0x00); // cr
 	}
@@ -664,7 +668,7 @@ impl SidPlayer {
 			self.resid.write(0x18, ((self.filter_matrix[self.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
 		}
 	}
-	
+
 	pub fn key_space(&mut self) {
 		self.state = if self.state == Paused {Playing} else {Paused}; 
 		if self.state == Paused {

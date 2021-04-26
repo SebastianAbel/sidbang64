@@ -31,8 +31,8 @@ run:
 show options:
 - `./target/release/sidbang64 --help`
 
-run with session, and play it:
-- `./target/release/sidbang64 --autoload --autoplay --session monomelvin`
+run with session, and play it with song mode:
+- `./target/release/sidbang64 --autoload --autoplay --songmode --session monomelvin`
 
 examples:
 - some projects are stored in the `/bng` subfolder
