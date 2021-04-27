@@ -518,6 +518,10 @@ impl SidPlayer {
 
 	}
 
+	pub fn toggle_song_mode( &mut self ) {
+		self.song_mode = !self.song_mode;
+	}
+	
 	pub fn note_off(&mut self) {
 	    self.resid.write(0x04, 0x00); // cr
 	}
@@ -674,6 +678,13 @@ impl SidPlayer {
 
 			self.length.store(samples as i32, std::sync::atomic::Ordering::Relaxed);
 			self.update.store(false, std::sync::atomic::Ordering::Relaxed);
+		}
+	}
+
+	pub fn play( &mut self ){
+		if self.state == Paused {	// protect against double play
+			self.state = Playing;
+			self.resid.write(0x18, ((self.filter_matrix[self.filter_patch_idx as usize].filter_type & 0x0f)<<4) | 0x0f);
 		}
 	}
 

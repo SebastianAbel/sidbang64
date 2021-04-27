@@ -39,6 +39,10 @@ fn main() {
     let mut multisampling_param = 4;
     let mut resampling = 0;
     let mut filter = true;
+    let mut session_name = "default".to_string();
+    let mut autoload = false;
+    let mut autoplay = true;
+    let mut songmode = false;
     {  // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
         ap.set_description("2020/2021 w4rp8");
@@ -66,6 +70,18 @@ fn main() {
         ap.refer(&mut multisampling_param)
             .add_option(&["-m", "--multisampling"], Store,
             "set multisampling (default: 4)");                        
+        ap.refer(&mut session_name)
+            .add_option(&["-S", "--session"], Store,
+            "set session name (default: default)");
+        ap.refer(&mut autoload)
+            .add_option(&["--autoload"], StoreTrue,
+            "autoload session on startup");
+        ap.refer(&mut autoplay)
+            .add_option(&["--autoplay"], StoreTrue,
+            "autoplay on startup");
+        ap.refer(&mut songmode)
+            .add_option(&["--songmode"], StoreTrue,
+            "song mode on startup");
         ap.parse_args_or_exit();
     }
 
@@ -94,6 +110,7 @@ fn main() {
 
     let image_map : conrod_core::image::Map<glium::texture::Texture2d> = conrod_core::image::Map::new();
     let mut app = gui::DemoApp::new();
+    app.set_session_name( &session_name );
     
 
     // A type used for converting `conrod_core::render::Primitives` into `Command`s that can be used
@@ -110,6 +127,19 @@ fn main() {
     let mut player = SidPlayer::new(sidmodel, resampling, filter, f64::max(0.2, buffersize as f64/1000.0));
     
     player.playback();
+
+    // handle autoload
+    if autoload {
+        gui::load_session( &mut app, &mut player );
+    }
+
+    if songmode {
+        player.toggle_song_mode();
+    }
+    
+    if autoplay {
+        player.play();  // Note: could use key_space, but this is more explicit
+    }
 
     // Start the loop:
     //

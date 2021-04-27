@@ -97,6 +97,10 @@ impl DemoApp {
     pub fn set_note(&mut self, note: u8) {
 
     }
+
+    pub fn set_session_name( &mut self, session_name: &str ) {
+        self.session_name = session_name.to_owned();
+    }
 /*
     pub fn save_session(&mut self, session_name: &String) -> std::io::Result<()> {
         let path_name = format!("./bng/{}", session_name);
@@ -325,6 +329,13 @@ widget_ids! {
     }
 }
 
+pub fn load_session( app: &mut DemoApp, player: &mut SidPlayer ) {
+   player.session_name = app.session_name.to_string();
+   player.load_session().unwrap();
+   //app.load_session(&app.session_name.to_string()).unwrap();
+
+   app.preview_update = 10;
+}
 
 pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, player: &mut SidPlayer) {
     use conrod_core::{widget, Colorable, Labelable, Positionable, Sizeable, Widget};
@@ -394,11 +405,7 @@ pub fn gui(ui: &mut conrod_core::UiCell, ids: &mut Ids, app: &mut DemoApp, playe
         .label(&format!("LOAD"))
         .set(ids.load, ui)
     {
-       player.session_name = app.session_name.to_string();
-       player.load_session().unwrap();
-       //app.load_session(&app.session_name.to_string()).unwrap();
-
-       app.preview_update = 10;
+        load_session( app, player );
     }
 
     for _press in widget::Button::new()
