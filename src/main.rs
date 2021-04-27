@@ -41,7 +41,7 @@ fn main() {
     let mut filter = true;
     let mut session_name = "default".to_string();
     let mut autoload = false;
-    let mut autoplay = true;
+    let mut autoplay = false;
     let mut songmode = false;
     {  // this block limits scope of borrows by ap.refer() method
         let mut ap = ArgumentParser::new();
